@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Плитка | Радиоуглеродное датирование</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}?v={{ style_version }}">
+</head>
+<body>
+    {% from 'like.html' import like_control %}
+    <main class="phone light-screen">
+        <h1 class="grid-title">Типы органических<br>останков</h1>
+
+        <form class="filter-form" action="/grid" method="get" autocomplete="off">
+            <label for="mass">Масса образца, мг</label>
+            <input
+                id="mass"
+                name="sample_mass_filter"
+                type="text"
+                value="{{ mass }}"
+                placeholder="Например, 10-100"
+                autocomplete="new-password"
+                aria-autocomplete="none"
+                autocorrect="off"
+                autocapitalize="off"
+                spellcheck="false"
+            >
+            <button class="find-button" type="submit" aria-label="Найти"></button>
+        </form>
+
+        <section class="materials-grid">
+            {% for material in materials %}
+            <article class="material-card">
+                <a href="/feed/{{ material.id }}" class="card-link">
+                    <img src="{{ material.image }}" alt="{{ material.title }}">
+                    <h2>{{ material.title }}</h2>
+                    <p>Масса: {{ material.mass }}</p>
+                    <p>Анализы: {{ material.analysis }}</p>
+                    <p>Срок: {{ material.deadline }}</p>
+                </a>
+                {{ like_control(material.id, material.title, material.unliked_count, material.liked, 'card-like') }}
+            </article>
+            {% else %}
+            <p class="empty-state">Ничего не найдено</p>
+            {% endfor %}
+        </section>
+
+        <nav class="bottom-tabs">
+            <a class="tab {{ 'active' if active_page == 'feed' else '' }}" href="/feed">Лента</a>
+            <a class="tab {{ 'active' if active_page == 'add' else '' }}" href="/add">Добавление</a>
+            <a class="tab {{ 'active' if active_page == 'grid' else '' }}" href="/grid">Плитка</a>
+        </nav>
+    </main>
+</body>
+</html>
