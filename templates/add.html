@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Добавление | Радиоуглеродное датирование</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}?v={{ style_version }}">
+</head>
+<body>
+    <main class="phone light-screen">
+        <header class="add-title">
+            <h1>Новый тип<br>образца</h1>
+            <span>Черновик</span>
+        </header>
+
+        <form class="add-form" action="/add" method="get" autocomplete="off" novalidate>
+            <label class="form-field name-field">
+                <span>Название образца</span>
+                <input name="title" type="text" value="{{ draft_material.title }}" autocomplete="off" spellcheck="false">
+            </label>
+
+            <label class="form-field description-field">
+                <span>Описание</span>
+                <textarea name="description" wrap="soft" autocomplete="off" spellcheck="false">{{ draft_material.description }}</textarea>
+            </label>
+
+            <label class="form-field mass-field">
+                <span>Масса образца, мг</span>
+                <input name="mass" type="text" value="{{ draft_material.mass.replace(' мг', '') }}" autocomplete="off" spellcheck="false">
+            </label>
+
+            <label class="form-field analysis-field">
+                <span>Анализы</span>
+                <input name="analysis" type="text" value="{{ draft_material.analysis }}" autocomplete="off" spellcheck="false">
+            </label>
+
+            <label class="form-field deadline-field">
+                <span>Срок предоставления результатов</span>
+                <input name="deadline" type="text" value="{{ draft_material.deadline }}" autocomplete="off" spellcheck="false">
+            </label>
+
+            <div class="form-field image-field url-field">
+                <label class="field-caption" for="image_url">Изображение</label>
+                <input
+                    class="file-picker"
+                    id="photo_file"
+                    name="photo_file"
+                    type="file"
+                    accept="image/*"
+                    aria-label="Новое изображение"
+                    title=""
+                    required
+                >
+                <label class="folder-button" for="photo_file" aria-label="Выбрать изображение">
+                    <img src="{{ icons.folder }}" alt="">
+                </label>
+                <input class="url-input" id="image_url" name="image_url" type="text" inputmode="url" value="{{ draft_material.image }}" autocomplete="off" spellcheck="false">
+            </div>
+
+            <div class="form-field video-field url-field">
+                <label class="field-caption" for="video_url">Видео</label>
+                <input
+                    class="file-picker"
+                    id="video_file"
+                    name="video_file"
+                    type="file"
+                    accept="video/*"
+                    aria-label="Новое видео"
+                    title=""
+                    required
+                >
+                <label class="folder-button" for="video_file" aria-label="Выбрать видео">
+                    <img src="{{ icons.folder }}" alt="">
+                </label>
+                <input class="url-input" id="video_url" name="video_url" type="text" inputmode="url" value="{{ draft_material.video }}" autocomplete="off" spellcheck="false">
+            </div>
+
+            <button class="submit-button" type="reset">Добавить</button>
+        </form>
+
+        <nav class="bottom-tabs">
+            <a class="tab {{ 'active' if active_page == 'feed' else '' }}" href="/feed">Лента</a>
+            <a class="tab {{ 'active' if active_page == 'add' else '' }}" href="/add">Добавление</a>
+            <a class="tab {{ 'active' if active_page == 'grid' else '' }}" href="/grid">Плитка</a>
+        </nav>
+    </main>
+</body>
+</html>
