@@ -22,11 +22,15 @@
                 <img src="{{ remains_item.image }}" alt="{{ remains_item.title }}">
                 <div class="card-copy">
                     <h2>{{ remains_item.title }}</h2>
-                    <p title="Образец: {{ remains_item.carbon_14_sample }}">C‑14: {{ '%g' | format(remains_item.carbon_14_pmc) }} pMC</p>
+                    <p {% if remains_item.carbon_14_sample %}title="Образец: {{ remains_item.carbon_14_sample }}"{% endif %}>C‑14: {{ '%g' | format(remains_item.carbon_14_pmc) }} pMC</p>
                     <p>Анализ: {{ remains_item.analysis_time_days }} раб. дней</p>
                 </div>
             </a>
-            {{ like_control(remains_item.title, remains_item.unliked_count, remains_item.liked, 'card-like') }}
+            {{ like_control(remains_item.title, remains_item.likes_count, 'card-like') }}
+            <form class="delete-form" action="/remains/{{ remains_item.id }}/delete" method="post">
+                <input type="hidden" name="carbon_min" value="{{ carbon_min }}">
+                <button class="delete-button" type="submit" aria-label="Удалить: {{ remains_item.title }}" title="Удалить: {{ remains_item.title }}"><img src="/static/icons/trash-2.svg" alt=""></button>
+            </form>
         </article>
         {% else %}
         <p class="empty-state">Ничего не найдено</p>

@@ -9,10 +9,10 @@
     <div class="feed-shade"></div>
 
     <aside class="feed-parameters" aria-label="Параметры останков">
-        {{ like_control(remains_item.title, remains_item.unliked_count, remains_item.liked, 'feed-like') }}
+        {{ like_control(remains_item.title, remains_item.likes_count, 'feed-like') }}
         <div class="feed-fact">
             <img src="{{ icons.carbon }}" alt="">
-            <strong title="Образец: {{ remains_item.carbon_14_sample }}">{{ '%g' | format(remains_item.carbon_14_pmc) }} pMC</strong>
+            <strong {% if remains_item.carbon_14_sample %}title="Образец: {{ remains_item.carbon_14_sample }}"{% endif %}>{{ '%g' | format(remains_item.carbon_14_pmc) }} pMC</strong>
             <span>Содержание C‑14</span>
         </div>
         <div class="feed-fact">

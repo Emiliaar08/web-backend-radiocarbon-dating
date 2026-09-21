@@ -1,19 +1,40 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from pathlib import Path
+from starlette.exceptions import HTTPException
 import uvicorn
 
-from api.handlers import router
+from api.handlers import page_context, router, templates
+from core.config import PROJECT_ROOT
+from db.session import engine
 
-PROJECT_ROOT = Path(__file__).resolve().parent
-app = FastAPI(title="Organic Remains", docs_url=None, redoc_url=None, openapi_url=None)
+
+@asynccontextmanager
+async def lifespan(app):
+    yield
+    await engine.dispose()
+
+
+app = FastAPI(title="Organic Remains", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
 
 
 @app.middleware("http")
 async def revalidate_pages(request, call_next):
     response = await call_next(request)
-    response.headers["Cache-Control"] = "no-store" if request.url.path == "/remains/draft" else "no-cache"
+    response.headers["Cache-Control"] = "no-store" if request.url.path.startswith("/remains") else "no-cache"
     return response
+
+
+@app.exception_handler(HTTPException)
+async def http_error(request, error):
+    return templates.TemplateResponse(
+        request=request,
+        name="error.html",
+        context=page_context("grid", status_code=error.status_code, detail=error.detail),
+        status_code=error.status_code,
+        headers=error.headers,
+    )
 
 
 app.mount("/static", StaticFiles(directory=PROJECT_ROOT / "static"), name="static")

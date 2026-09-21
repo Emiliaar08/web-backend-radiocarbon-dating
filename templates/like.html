@@ -1,9 +1,7 @@
-{% macro like_control(title, count, liked, placement) -%}
-<label class="like-control {{ placement }}">
-    <input class="like-toggle" type="checkbox" aria-label="Нравится: {{ title }}" autocomplete="off" {% if liked %}checked{% endif %}>
+{% macro like_control(title, count, placement) -%}
+<span class="like-control {{ placement }}" role="img" aria-label="{{ title }}: {{ count }} отметок нравится">
     <span class="like-text" aria-hidden="true">
-        <span class="heart heart-outline">♡</span><span class="heart heart-filled">♥</span>
-        <span class="count-off">{{ count }}</span><span class="count-on">{{ count + 1 }}</span>
+        <span class="heart">♡</span><span>{{ count }}</span>
     </span>
-</label>
+</span>
 {%- endmacro %}
