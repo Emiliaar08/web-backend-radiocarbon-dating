@@ -1,61 +1,32 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Лента | Радиоуглеродное датирование</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}?v={{ style_version }}">
-</head>
-<body>
-    {% from 'like.html' import like_control %}
-    <main class="phone feed-screen">
-        <video class="feed-video" autoplay muted loop playsinline preload="auto" aria-label="{{ material.title }}">
-            <source src="{{ material.video }}">
-        </video>
-        <div class="feed-shade"></div>
+{% extends 'index.html' %}
+{% from 'like.html' import like_control %}
+{% block title %}{{ remains_item.title }}{% endblock %}
+{% block screen_class %}feed-screen{% endblock %}
+{% block content %}
+    <video class="feed-video" autoplay muted loop playsinline preload="auto" aria-label="{{ remains_item.title }}">
+        <source src="{{ remains_item.video }}">
+    </video>
+    <div class="feed-shade"></div>
 
-        <div class="feed-content">
-        <section class="feed-copy {{ 'expanded' if expanded else '' }}">
-            {{ like_control(material.id, material.title, unliked_count, liked, 'feed-like') }}
-            <h1>{{ material.title }}</h1>
-            <p>{{ material.description }}</p>
-            <a href="/feed/{{ material.id }}?expanded={{ 'false' if expanded else 'true' }}" aria-expanded="{{ 'true' if expanded else 'false' }}">
-                <span>{{ 'Свернуть' if expanded else 'Развернуть' }}</span>
-            </a>
-        </section>
-
-        <section class="feed-facts" aria-label="Параметры образца">
-            <article class="feed-fact">
-                <img src="{{ icons.mass }}" alt="">
-                <div>
-                    <strong>{{ material.mass }}</strong>
-                    <span>Масса образца</span>
-                </div>
-            </article>
-            <article class="feed-fact">
-                <img src="{{ icons.analysis }}" alt="">
-                <div>
-                    <strong>{{ material.analysis }}</strong>
-                    <span>Анализы</span>
-                </div>
-            </article>
-            <article class="feed-fact">
-                <img src="{{ icons.deadline }}" alt="">
-                <div>
-                    <strong>{{ material.deadline.replace('дней', 'рабочих дней') }}</strong>
-                    <span>Срок предоставления результатов</span>
-                </div>
-            </article>
-        </section>
+    <aside class="feed-parameters" aria-label="Параметры останков">
+        {{ like_control(remains_item.title, remains_item.unliked_count, remains_item.liked, 'feed-like') }}
+        <div class="feed-fact">
+            <img src="{{ icons.carbon }}" alt="">
+            <strong title="Образец: {{ remains_item.carbon_14_sample }}">{{ '%g' | format(remains_item.carbon_14_pmc) }} pMC</strong>
+            <span>Содержание C‑14</span>
         </div>
+        <div class="feed-fact">
+            <img src="{{ icons.analysis_time }}" alt="">
+            <strong>{{ remains_item.analysis_time_days }} раб. дней</strong>
+            <span>Время анализа</span>
+        </div>
+        <a class="next-feed-button" href="/remains/feed?remains_id={{ remains_item.id }}&amp;next=true">далее</a>
+    </aside>
 
-        <a class="next-feed-button" href="/feed/{{ material.id }}?next=true">далее</a>
-
-        <nav class="bottom-tabs">
-            <a class="tab {{ 'active' if active_page == 'feed' else '' }}" href="/feed">Лента</a>
-            <a class="tab {{ 'active' if active_page == 'add' else '' }}" href="/add">Добавление</a>
-            <a class="tab {{ 'active' if active_page == 'grid' else '' }}" href="/grid">Плитка</a>
-        </nav>
-    </main>
-</body>
-</html>
+    <section class="feed-copy {{ 'expanded' if expanded else '' }}">
+        <img class="feed-photo" src="{{ remains_item.image }}" alt="{{ remains_item.title }}">
+        <h1>{{ remains_item.title }}</h1>
+        <p>{{ remains_item.description }}</p>
+        <a class="expand-button" href="/remains/feed?remains_id={{ remains_item.id }}&amp;expanded={{ 'false' if expanded else 'true' }}" aria-expanded="{{ 'true' if expanded else 'false' }}">{{ 'Свернуть' if expanded else 'Развернуть' }}</a>
+    </section>
+{% endblock %}

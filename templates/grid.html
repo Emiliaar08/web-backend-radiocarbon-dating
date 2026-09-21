@@ -1,55 +1,35 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Плитка | Радиоуглеродное датирование</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}?v={{ style_version }}">
-</head>
-<body>
-    {% from 'like.html' import like_control %}
-    <main class="phone light-screen">
-        <h1 class="grid-title">Типы органических<br>останков</h1>
-
-        <form class="filter-form" action="/grid" method="get" autocomplete="off">
-            <label for="mass">Масса образца, мг</label>
-            <input
-                id="mass"
-                name="sample_mass_filter"
-                type="text"
-                value="{{ mass }}"
-                placeholder="Например, 10-100"
-                autocomplete="new-password"
-                aria-autocomplete="none"
-                autocorrect="off"
-                autocapitalize="off"
-                spellcheck="false"
-            >
-            <button class="find-button" type="submit" aria-label="Найти"></button>
-        </form>
-
-        <section class="materials-grid">
-            {% for material in materials %}
-            <article class="material-card">
-                <a href="/feed/{{ material.id }}" class="card-link">
-                    <img src="{{ material.image }}" alt="{{ material.title }}">
-                    <h2>{{ material.title }}</h2>
-                    <p>Масса: {{ material.mass }}</p>
-                    <p>Анализы: {{ material.analysis }}</p>
-                    <p>Срок: {{ material.deadline }}</p>
-                </a>
-                {{ like_control(material.id, material.title, material.unliked_count, material.liked, 'card-like') }}
-            </article>
-            {% else %}
-            <p class="empty-state">Ничего не найдено</p>
-            {% endfor %}
-        </section>
-
-        <nav class="bottom-tabs">
-            <a class="tab {{ 'active' if active_page == 'feed' else '' }}" href="/feed">Лента</a>
-            <a class="tab {{ 'active' if active_page == 'add' else '' }}" href="/add">Добавление</a>
-            <a class="tab {{ 'active' if active_page == 'grid' else '' }}" href="/grid">Плитка</a>
-        </nav>
-    </main>
-</body>
-</html>
+{% extends 'index.html' %}
+{% from 'like.html' import like_control %}
+{% block title %}Плитка{% endblock %}
+{% block content %}
+    <header class="page-heading"><h1>Типы органических<br>останков</h1></header>
+    <form class="carbon-filter" action="/remains" method="get">
+        <label for="carbon_min">Содержание C‑14, pMC</label>
+        <div class="filter-controls">
+            <div class="range-field">
+                <input id="carbon_min" name="carbon_min" type="range" min="0" max="200" step="0.1" value="{{ '%g' | format(carbon_min) }}" list="carbon-ticks">
+                <datalist id="carbon-ticks"><option value="0"></option><option value="50"></option><option value="100"></option><option value="150"></option><option value="200"></option></datalist>
+                <div class="range-scale" aria-hidden="true"><span>0</span><span>50</span><span>100</span><span>150</span><span>200</span></div>
+            </div>
+            <button class="find-button" type="submit" aria-label="Найти" title="Найти"></button>
+        </div>
+        <p class="filter-value">От <output class="range-value" for="carbon_min" aria-hidden="true"><span>{{ '%g' | format(carbon_min) }}</span></output> pMC</p>
+    </form>
+    <section class="remains-grid" aria-label="Органические останки">
+        {% for remains_item in remains %}
+        <article class="remains-card">
+            <a href="/remains/feed?remains_id={{ remains_item.id }}" class="card-link">
+                <img src="{{ remains_item.image }}" alt="{{ remains_item.title }}">
+                <div class="card-copy">
+                    <h2>{{ remains_item.title }}</h2>
+                    <p title="Образец: {{ remains_item.carbon_14_sample }}">C‑14: {{ '%g' | format(remains_item.carbon_14_pmc) }} pMC</p>
+                    <p>Анализ: {{ remains_item.analysis_time_days }} раб. дней</p>
+                </div>
+            </a>
+            {{ like_control(remains_item.title, remains_item.unliked_count, remains_item.liked, 'card-like') }}
+        </article>
+        {% else %}
+        <p class="empty-state">Ничего не найдено</p>
+        {% endfor %}
+    </section>
+{% endblock %}

@@ -1,159 +1,105 @@
-import math
-import re
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from data.collections import CURRENT_USER_ID, icons, materials
+from data.collections import CURRENT_USER_ID, icons, remains
 
-router = APIRouter()
-templates = Jinja2Templates(directory="templates")
-
-
-def get_published_materials():
-    return [material for material in materials if material["status"] == "published"]
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+router = APIRouter(prefix="/remains")
+templates = Jinja2Templates(directory=PROJECT_ROOT / "templates")
 
 
-def get_draft_material():
-    return next((material for material in materials if material["status"] == "draft"), None)
+def get_published_remains():
+    return [item for item in remains if item["status"] == "published"]
 
 
-def get_material_by_id(material_id: int):
-    for material in get_published_materials():
-        if material["id"] == material_id:
-            return material
-    return None
+def get_draft_remains():
+    return next((item for item in remains if item["status"] == "draft"), None)
 
 
-def get_next_material(current_id: int):
-    published_materials = get_published_materials()
-    following = [item for item in published_materials if item["id"] > current_id]
-    return min(following or published_materials, key=lambda item: item["id"], default=None)
+def get_remains_by_id(remains_id: int):
+    return next((item for item in get_published_remains() if item["id"] == remains_id), None)
 
 
-def get_likes_count(material):
-    return len(material["likes"])
+def get_next_remains(current_id: int):
+    published_remains = get_published_remains()
+    following = [item for item in published_remains if item["id"] > current_id]
+    return min(following or published_remains, key=lambda item: item["id"], default=None)
 
 
-def is_liked_by_current_user(material):
-    return any(like["user_id"] == CURRENT_USER_ID for like in material["likes"])
+def get_likes_count(remains_item):
+    return len(remains_item["likes"])
 
 
-def parse_mass_range(mass_text: str):
-    clean_value = (
-        mass_text.lower()
-        .replace("мг", "")
-        .replace(",", ".")
-        .replace(" ", "")
-    )
-
-    if not re.fullmatch(r"\d+(?:\.\d+)?(?:-\d+(?:\.\d+)?)?", clean_value):
-        raise ValueError("Введите массу или диапазон положительных чисел")
-    values = [float(value) for value in clean_value.split("-")]
-    start, end = values[0], values[-1]
-    if not all(math.isfinite(value) for value in values) or start > end:
-        raise ValueError("Некорректный диапазон массы")
-    return start, end
+def is_liked_by_current_user(remains_item):
+    return any(like["user_id"] == CURRENT_USER_ID for like in remains_item["likes"])
 
 
-def material_matches_mass(material, mass_query: str):
-    if not mass_query:
-        return True
-
-    try:
-        material_min, material_max = parse_mass_range(material["mass"])
-        query_min, query_max = parse_mass_range(mass_query)
-    except ValueError:
-        return False
-
-    return material_min <= query_max and query_min <= material_max
-
-
-def prepare_materials_for_template(source_materials):
-    prepared_materials = []
-
-    for material in source_materials:
-        prepared_material = material.copy()
-        prepared_material["likes_count"] = get_likes_count(material)
-        prepared_material["liked"] = is_liked_by_current_user(material)
-        prepared_material["unliked_count"] = get_likes_count(material) - int(prepared_material["liked"])
-        prepared_materials.append(prepared_material)
-
-    return prepared_materials
+def prepare_remains_for_template(source_remains):
+    prepared_remains = []
+    for item in source_remains:
+        prepared = item.copy()
+        prepared["likes_count"] = get_likes_count(item)
+        prepared["liked"] = is_liked_by_current_user(item)
+        prepared["unliked_count"] = prepared["likes_count"] - int(prepared["liked"])
+        prepared_remains.append(prepared)
+    return prepared_remains
 
 
 def page_context(active_page: str, **extra):
     return {
         "active_page": active_page,
         "icons": icons,
-        "style_version": Path("static/css/style.css").stat().st_mtime_ns,
+        "style_version": (PROJECT_ROOT / "static/css/style.css").stat().st_mtime_ns,
         **extra,
     }
 
 
-@router.get("/", include_in_schema=False)
-@router.get("/feed", include_in_schema=False)
-@router.get("/feed/{material_id}")
-def feed_page(
+@router.get("/feed")
+def remains_feed(
     request: Request,
-    material_id: int | None = None,
+    remains_id: int | None = None,
     next: bool = False,
     expanded: bool = False,
 ):
-    if material_id is None or next:
-        material = get_next_material(material_id if material_id is not None else -1)
-        if material is None:
-            raise HTTPException(status_code=404, detail="Нет опубликованных материалов")
-        return RedirectResponse(url=f"/feed/{material['id']}", status_code=303)
-
-    material = get_material_by_id(material_id)
-
-    if material is None:
-        raise HTTPException(status_code=404, detail="Материал не найден")
-
+    if remains_id is not None and get_remains_by_id(remains_id) is None:
+        raise HTTPException(status_code=404, detail="Останки не найдены")
+    if remains_id is None or next:
+        item = get_next_remains(remains_id if remains_id is not None else -1)
+        if item is None:
+            raise HTTPException(status_code=404, detail="Нет опубликованных останков")
+        return RedirectResponse(url=f"/remains/feed?remains_id={item['id']}", status_code=303)
+    item = prepare_remains_for_template([get_remains_by_id(remains_id)])[0]
     return templates.TemplateResponse(
         request=request,
         name="feed.html",
-        context=page_context(
-            "feed",
-            material=material,
-            likes_count=get_likes_count(material),
-            liked=is_liked_by_current_user(material),
-            unliked_count=get_likes_count(material) - int(is_liked_by_current_user(material)),
-            expanded=expanded,
-        ),
+        context=page_context("feed", remains_item=item, expanded=expanded),
     )
 
 
-@router.get("/add")
-def add_page(request: Request):
-    draft_material = get_draft_material()
-    if draft_material is None:
+@router.get("/draft")
+def remains_draft(request: Request):
+    draft_remains = get_draft_remains()
+    if draft_remains is None:
         raise HTTPException(status_code=404, detail="Черновик не найден")
     return templates.TemplateResponse(
         request=request,
         name="add.html",
-        context=page_context("add", draft_material=draft_material),
+        context=page_context("draft", draft_remains=draft_remains),
     )
 
 
-@router.get("/grid")
-def grid_page(request: Request, mass: str = "", sample_mass_filter: str = ""):
-    mass_query = sample_mass_filter or mass
-    filtered_materials = [
-        material
-        for material in get_published_materials()
-        if material_matches_mass(material, mass_query)
+@router.get("")
+def remains_grid(request: Request, carbon_min: float = Query(default=0, ge=0, le=200)):
+    filtered_remains = [
+        item for item in get_published_remains() if item["carbon_14_pmc"] >= carbon_min
     ]
-
     return templates.TemplateResponse(
         request=request,
         name="grid.html",
         context=page_context(
-            "grid",
-            materials=prepare_materials_for_template(filtered_materials),
-            mass=mass_query,
+            "grid", remains=prepare_remains_for_template(filtered_remains), carbon_min=carbon_min
         ),
     )

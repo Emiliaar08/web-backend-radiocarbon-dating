@@ -2,9 +2,18 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=/feed/1">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Радиоуглеродное датирование</title>
+    <title>{% block title %}Органические останки{% endblock %} | Радиоуглеродное датирование</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}?v={{ style_version }}">
 </head>
-<body></body>
+<body>
+    <main class="phone {% block screen_class %}light-screen{% endblock %}">
+        {% block content %}{% endblock %}
+        <nav class="bottom-tabs" aria-label="Разделы">
+            <a class="tab {{ 'active' if active_page == 'feed' else '' }}" {% if active_page == 'feed' %}aria-current="page"{% endif %} href="/remains/feed">Лента</a>
+            <a class="tab {{ 'active' if active_page == 'draft' else '' }}" {% if active_page == 'draft' %}aria-current="page"{% endif %} href="/remains/draft">Добавление</a>
+            <a class="tab {{ 'active' if active_page == 'grid' else '' }}" {% if active_page == 'grid' %}aria-current="page"{% endif %} href="/remains">Плитка</a>
+        </nav>
+    </main>
+</body>
 </html>
