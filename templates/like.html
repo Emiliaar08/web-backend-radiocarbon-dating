@@ -1,4 +1,4 @@
-{% macro like_control(material_id, title, count, liked, placement) -%}
+{% macro like_control(title, count, liked, placement) -%}
 <label class="like-control {{ placement }}">
     <input class="like-toggle" type="checkbox" aria-label="Нравится: {{ title }}" autocomplete="off" {% if liked %}checked{% endif %}>
     <span class="like-text" aria-hidden="true">
