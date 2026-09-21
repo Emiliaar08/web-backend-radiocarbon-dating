@@ -1,0 +1,9 @@
+{% extends 'index.html' %}
+{% block title %}{{ status_code }}{% endblock %}
+{% block content %}
+    <section class="error-state">
+        <h1>{{ status_code }}</h1>
+        <p>{{ detail }}</p>
+        <a href="/remains">К списку останков</a>
+    </section>
+{% endblock %}
