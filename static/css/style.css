@@ -37,8 +37,7 @@ input,
 textarea {
     font: inherit;
 }
-button,
-.folder-button {
+button {
     cursor: pointer;
 }
 a:focus-visible,
@@ -349,59 +348,8 @@ button:focus-visible {
     border-color: #2a64c5;
 }
 .url-field input[type="url"] {
-    padding-left: 38px;
+    padding-left: 13px;
     font-size: 13px;
-}
-.folder-button {
-    position: absolute;
-    top: 9px;
-    left: 9px;
-    width: 25px;
-    height: 25px;
-    transition: transform 160ms ease;
-}
-.folder-button img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-.folder-button:hover {
-    transform: translateY(-1px);
-}
-.folder-button:active {
-    transform: scale(0.92);
-}
-.file-picker {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-    clip-path: inset(50%);
-}
-.file-picker:focus-visible + .folder-button {
-    outline: 2px solid #2a64c5;
-    outline-offset: 2px;
-}
-.file-picker:valid {
-    position: static;
-    display: block;
-    width: 100%;
-    height: 25px;
-    margin-top: 4px;
-    color: #64686f;
-    font-size: 12px;
-    opacity: 1;
-    clip-path: none;
-}
-.url-field:has(.file-picker:valid) {
-    display: flex;
-    flex-direction: column;
-}
-.file-picker:valid {
-    order: 2;
-}
-.file-picker::file-selector-button {
-    display: none;
 }
 .submit-button {
     position: absolute;
@@ -653,15 +601,10 @@ button:focus-visible {
     border: 0;
     border-radius: 7px;
     background: #ffffff;
+    color: #454545;
+    font-size: 22px;
+    line-height: 1;
     transition: background-color 180ms ease, transform 180ms ease;
-}
-
-.delete-button img {
-    width: 17px;
-    height: 17px;
-    aspect-ratio: auto;
-    border-radius: 0;
-    object-fit: contain;
 }
 
 .delete-button:hover {

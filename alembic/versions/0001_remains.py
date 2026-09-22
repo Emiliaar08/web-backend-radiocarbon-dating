@@ -24,8 +24,6 @@ def upgrade():
         sa.Column("video_url", sa.String(1024)),
         sa.Column("analysis_time_days", sa.Integer()),
         sa.Column("carbon_14_pmc", sa.Numeric(7, 3)),
-        sa.Column("carbon_14_sample", sa.String(160)),
-        sa.Column("carbon_14_source", sa.String(1024)),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.Column("creator_id", sa.Integer(), sa.ForeignKey("researchers.id", ondelete="RESTRICT"), nullable=False),
         sa.Column("published_at", sa.DateTime(timezone=True)),

@@ -1,22 +1,31 @@
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Annotated
 
+import psycopg
 from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field, StringConstraints, ValidationError
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.config import PROJECT_ROOT
-from core.media import DEFAULT_IMAGE, DEFAULT_VIDEO, ICONS, prepare_remains
-from data import repository
+from core.config import PROJECT_ROOT, settings
 from db.session import get_db
+from models.remains_likes import RemainsLikes
+from models.remains import Remains
 
 router = APIRouter(prefix="/remains")
 templates = Jinja2Templates(directory=PROJECT_ROOT / "templates")
 Database = Annotated[AsyncSession, Depends(get_db)]
 RemainsTitle = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)]
+DEFAULT_DRAFT_IMAGE = f"{settings.MINIO_URL}/wood.jpg"
+DEFAULT_DRAFT_VIDEO = f"{settings.MINIO_URL}/wood-video.mp4"
+ICONS = {
+    "carbon": f"{settings.MINIO_URL}/flask.png",
+    "analysis_time": f"{settings.MINIO_URL}/watch.png",
+}
 
 
 class DraftFields(BaseModel):
@@ -38,13 +47,96 @@ def page_context(active_page: str, **extra):
     }
 
 
+def remain_values(remain, likes_count=0):
+    return {
+        "id": remain.id,
+        "title": remain.title,
+        "description": remain.description or "",
+        "analysis_time_days": remain.analysis_time_days,
+        "carbon_14_pmc": remain.carbon_14_pmc,
+        "image": remain.image_url,
+        "video": remain.video_url,
+        "image_url": remain.image_url,
+        "video_url": remain.video_url,
+        "likes_count": likes_count,
+    }
+
+
+def remains_with_likes():
+    likes = select(func.count(RemainsLikes.id)).where(RemainsLikes.remains_id == Remains.id).scalar_subquery()
+    return select(Remains, likes.label("likes_count"))
+
+
+async def get_published_remains(db, carbon_min):
+    result = await db.execute(
+        remains_with_likes().where(Remains.status == "published", Remains.carbon_14_pmc >= carbon_min).order_by(Remains.id)
+    )
+    return result.all()
+
+
+async def get_remain_by_id(db, remains_id):
+    result = await db.execute(remains_with_likes().where(Remains.id == remains_id, Remains.status == "published"))
+    return result.first()
+
+
+async def get_next_remain_id(db, current_id):
+    following = await db.scalar(select(func.min(Remains.id)).where(Remains.status == "published", Remains.id > current_id))
+    if following is not None:
+        return following
+    return await db.scalar(select(func.min(Remains.id)).where(Remains.status == "published"))
+
+
+async def get_draft_remain(db):
+    return await db.scalar(select(Remains).where(Remains.creator_id == 999, Remains.status == "draft"))
+
+
+async def create_draft(db, title):
+    draft = Remains(
+        title=title,
+        status="draft",
+        image_url=DEFAULT_DRAFT_IMAGE,
+        video_url=DEFAULT_DRAFT_VIDEO,
+        creator_id=999,
+    )
+    db.add(draft)
+    await db.commit()
+    return draft
+
+
+async def publish_draft(db, draft, fields):
+    draft.title = fields.title
+    draft.description = fields.description
+    draft.analysis_time_days = fields.analysis_time_days
+    draft.carbon_14_pmc = fields.carbon_14_pmc
+    draft.status = "published"
+    draft.published_at = datetime.now(timezone.utc)
+    await db.commit()
+
+
+async def delete_remain(remains_id):
+    async with await psycopg.AsyncConnection.connect(
+        host=settings.DB_HOST,
+        port=settings.DB_PORT,
+        dbname=settings.DB_NAME,
+        user=settings.DB_USER,
+        password=settings.DB_PASSWORD,
+    ) as connection:
+        async with connection.cursor() as cursor:
+            await cursor.execute(
+                "UPDATE remains SET status = %s WHERE id = %s AND status = %s RETURNING id",
+                ("deleted", remains_id, "published"),
+            )
+            return await cursor.fetchone() is not None
+
+
 async def draft_response(request: Request, draft, values=None, errors=None, status_code=200):
     if draft is not None:
-        draft_values = (await prepare_remains([(draft, 0)]))[0]
+        draft_values = remain_values(draft)
     else:
         draft_values = {
             "title": "", "description": "", "analysis_time_days": "", "carbon_14_pmc": "",
-            "image": DEFAULT_IMAGE, "video": DEFAULT_VIDEO, "image_url": "", "video_url": "",
+            "image": DEFAULT_DRAFT_IMAGE, "video": DEFAULT_DRAFT_VIDEO,
+            "image_url": DEFAULT_DRAFT_IMAGE, "video_url": DEFAULT_DRAFT_VIDEO,
         }
     if values:
         draft_values.update(values)
@@ -68,15 +160,15 @@ def form_errors(error: ValidationError):
 
 @router.get("/feed")
 async def remains_feed(request: Request, db: Database, remains_id: int | None = None, next: bool = False, expanded: bool = False):
-    row = await repository.get_remains_by_id(db, remains_id) if remains_id is not None else None
+    row = await get_remain_by_id(db, remains_id) if remains_id is not None else None
     if remains_id is not None and row is None:
         raise HTTPException(status_code=404, detail="Останки не найдены или не опубликованы")
     if remains_id is None or next:
-        following = await repository.get_next_remains_id(db, remains_id if remains_id is not None else -1)
+        following = await get_next_remain_id(db, remains_id if remains_id is not None else -1)
         if following is None:
             raise HTTPException(status_code=404, detail="Пока нет опубликованных останков")
         return RedirectResponse(url=f"/remains/feed?remains_id={following}", status_code=303)
-    item = (await prepare_remains([row]))[0]
+    item = remain_values(*row)
     return templates.TemplateResponse(
         request=request, name="feed.html", context=page_context("feed", remains_item=item, expanded=expanded)
     )
@@ -84,32 +176,32 @@ async def remains_feed(request: Request, db: Database, remains_id: int | None = 
 
 @router.get("/draft")
 async def remains_draft(request: Request, db: Database):
-    return await draft_response(request, await repository.get_draft_remains(db))
+    return await draft_response(request, await get_draft_remain(db))
 
 
 @router.get("")
 async def remains_grid(request: Request, db: Database, carbon_min: Decimal = Query(default=Decimal(0), ge=0, le=200)):
-    rows = await repository.get_published_remains(db, carbon_min)
+    rows = await get_published_remains(db, carbon_min)
     return templates.TemplateResponse(
         request=request,
         name="grid.html",
-        context=page_context("grid", remains=await prepare_remains(rows), carbon_min=carbon_min),
+        context=page_context("grid", remains=[remain_values(*row) for row in rows], carbon_min=carbon_min),
     )
 
 
 @router.post("/draft")
 async def create_remains(request: Request, db: Database, title: str = Form("")):
-    if await repository.get_draft_remains(db) is not None:
+    if await get_draft_remain(db) is not None:
         return RedirectResponse(url="/remains/draft", status_code=303)
     try:
         fields = DraftFields(title=title)
     except ValidationError as error:
         return await draft_response(request, None, {"title": title}, form_errors(error), 422)
     try:
-        await repository.create_draft(db, fields.title)
+        await create_draft(db, fields.title)
     except IntegrityError as error:
         await db.rollback()
-        if await repository.get_draft_remains(db) is None:
+        if await get_draft_remain(db) is None:
             raise error
     return RedirectResponse(url="/remains/draft", status_code=303)
 
@@ -124,7 +216,9 @@ async def publish_remains(
     analysis_time_days: str = Form(""),
     carbon_14_pmc: str = Form(""),
 ):
-    draft = await repository.get_draft_for_publication(db, remains_id)
+    draft = await db.scalar(
+        select(Remains).where(Remains.id == remains_id, Remains.creator_id == 999, Remains.status == "draft").with_for_update()
+    )
     if draft is None:
         raise HTTPException(status_code=404, detail="Черновик не найден или уже опубликован")
     values = {"title": title, "description": description, "analysis_time_days": analysis_time_days, "carbon_14_pmc": carbon_14_pmc}
@@ -132,12 +226,12 @@ async def publish_remains(
         fields = PublicationFields(**values)
     except ValidationError as error:
         return await draft_response(request, draft, values, form_errors(error), 422)
-    await repository.publish_draft(db, draft, fields.title, fields.description, fields.analysis_time_days, fields.carbon_14_pmc)
+    await publish_draft(db, draft, fields)
     return RedirectResponse(url=f"/remains/feed?remains_id={draft.id}", status_code=303)
 
 
 @router.post("/{remains_id}/delete")
 async def delete_remains(remains_id: int, carbon_min: Decimal = Form(default=Decimal(0), ge=0, le=200)):
-    if not await repository.delete_remains(remains_id):
+    if not await delete_remain(remains_id):
         raise HTTPException(status_code=404, detail="Опубликованные останки не найдены")
     return RedirectResponse(url=f"/remains?carbon_min={carbon_min:g}", status_code=303)
