@@ -1,9 +1,9 @@
 # Радиоуглеродное датирование
 
-Тема 19: типы органических останков. Ветка `database` содержит лабораторную 2:
-FastAPI, Jinja2, PostgreSQL, SQLAlchemy, Alembic, Adminer и MinIO. Без JavaScript.
+Ветка `database` содержит вторую лабораторную работу: FastAPI, PostgreSQL,
+SQLAlchemy, Alembic, Adminer и MinIO. JavaScript не используется.
 
-Запуск из корня проекта:
+Запуск:
 
 ```bash
 source radiocarbon_dating_webapp/bin/activate
@@ -13,16 +13,14 @@ python -m alembic upgrade head
 python main.py
 ```
 
-Настройки подключения заданы в `.env`, пример без личных данных: `.env.example`.
-Для новой БД выполните `db/seed.sql` через раздел «SQL-запрос» в Adminer.
-На текущем компьютере миграция и первоначальное наполнение уже выполнены.
+Настройки подключения заданы в `.env`. Таблицы создаются миграцией, начальные записи
+добавляются в Adminer вручную.
 
-- Приложение: http://127.0.0.1:8000/remains
-- Adminer: http://localhost:8081; сервер `postgres`, база `radiocarbon_db`.
-- Подробное описание, порядок защиты и SQL: [Лабораторная 2](docs/LAB2.md).
-- ER-диаграмма StarUML: [radiocarbon.mdj](docs/radiocarbon.mdj).
-- Просмотр ER-диаграммы: [er.svg](docs/er.svg).
-- Проверка: `python -m unittest tests.test_lab2 -v`.
+Приложение: http://127.0.0.1:8000/remains
+
+Adminer: http://localhost:8081, сервер `postgres`, база `radiocarbon_db`.
+
+Изображения и видео лежат в MinIO, их URL указываются в записях таблицы `remains`.
 
 ## Задание первой лабораторной
 

@@ -4,7 +4,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import URL
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-CURRENT_USER_ID = 999
 
 
 class Settings(BaseSettings):

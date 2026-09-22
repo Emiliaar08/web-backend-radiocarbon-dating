@@ -6,7 +6,9 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from core.config import settings
 from db.base import Base
-from models import Remains, RemainsLike, Researcher
+from models.remains_likes import RemainsLikes
+from models.remains import Remains
+from models.researchers import Researchers
 
 target_metadata = Base.metadata
 

@@ -1,8 +1,4 @@
-from datetime import datetime
-from decimal import Decimal
-
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Numeric, String, func, text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import CheckConstraint, Column, DateTime, ForeignKey, Index, Integer, Numeric, String, func, text
 
 from db.base import Base
 
@@ -22,16 +18,14 @@ class Remains(Base):
         Index("uq_remains_creator_draft", "creator_id", unique=True, postgresql_where=text("status = 'draft'")),
     )
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    title: Mapped[str] = mapped_column(String(120))
-    description: Mapped[str | None] = mapped_column(String(2000))
-    status: Mapped[str] = mapped_column(String(16), server_default="draft")
-    image_url: Mapped[str | None] = mapped_column(String(1024))
-    video_url: Mapped[str | None] = mapped_column(String(1024))
-    analysis_time_days: Mapped[int | None]
-    carbon_14_pmc: Mapped[Decimal | None] = mapped_column(Numeric(7, 3))
-    carbon_14_sample: Mapped[str | None] = mapped_column(String(160))
-    carbon_14_source: Mapped[str | None] = mapped_column(String(1024))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    creator_id: Mapped[int] = mapped_column(ForeignKey("researchers.id", ondelete="RESTRICT"))
-    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    id = Column(Integer, primary_key=True)
+    title = Column(String(120), nullable=False)
+    description = Column(String(2000))
+    status = Column(String(16), nullable=False, server_default="draft")
+    image_url = Column(String(1024))
+    video_url = Column(String(1024))
+    analysis_time_days = Column(Integer)
+    carbon_14_pmc = Column(Numeric(7, 3))
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    creator_id = Column(Integer, ForeignKey("researchers.id", ondelete="RESTRICT"), nullable=False)
+    published_at = Column(DateTime(timezone=True))
