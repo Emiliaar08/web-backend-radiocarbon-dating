@@ -217,9 +217,6 @@ button:focus-visible {
     letter-spacing: 0.08em;
     overflow-wrap: anywhere;
 }
-.draft-heading {
-    padding-bottom: 32px;
-}
 .remains-form {
     position: absolute;
     top: 176px;
