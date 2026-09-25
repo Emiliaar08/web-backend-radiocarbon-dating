@@ -1,9 +1,11 @@
 from datetime import datetime, timezone
 from decimal import Decimal
+from pathlib import Path
+from uuid import uuid4
 from typing import Annotated
 
 import psycopg
-from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field, StringConstraints, ValidationError
@@ -20,11 +22,16 @@ router = APIRouter(prefix="/remains")
 templates = Jinja2Templates(directory=PROJECT_ROOT / "templates")
 Database = Annotated[AsyncSession, Depends(get_db)]
 RemainsTitle = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)]
-DEFAULT_DRAFT_IMAGE = f"{settings.MINIO_URL}/wood.jpg"
-DEFAULT_DRAFT_VIDEO = f"{settings.MINIO_URL}/wood-video.mp4"
+DEFAULT_DRAFT_IMAGE = "/static/remains/wood.jpg"
+DEFAULT_DRAFT_VIDEO = "/static/remains/wood-video.mp4"
 ICONS = {
     "carbon": f"{settings.MINIO_URL}/flask.png",
     "analysis_time": f"{settings.MINIO_URL}/watch.png",
+    "folder": f"{settings.MINIO_URL}/folder.png.webp",
+}
+UPLOAD_EXTENSIONS = {
+    "image": {".jpg", ".jpeg", ".png", ".webp", ".gif"},
+    "video": {".mp4", ".mov", ".webm", ".m4v"},
 }
 
 
@@ -42,22 +49,29 @@ def page_context(active_page: str, **extra):
     return {
         "active_page": active_page,
         "icons": ICONS,
-        "style_version": (PROJECT_ROOT / "static/css/style.css").stat().st_mtime_ns,
+        "style_version": (PROJECT_ROOT / "static/css/remains.css").stat().st_mtime_ns,
         **extra,
     }
 
 
 def remain_values(remain, likes_count=0):
+    image_url = remain.image_url
+    video_url = remain.video_url
+    if remain.status == "draft":
+        if image_url == f"{settings.MINIO_URL}/wood.jpg":
+            image_url = DEFAULT_DRAFT_IMAGE
+        if video_url == f"{settings.MINIO_URL}/wood-video.mp4":
+            video_url = DEFAULT_DRAFT_VIDEO
     return {
         "id": remain.id,
         "title": remain.title,
         "description": remain.description or "",
         "analysis_time_days": remain.analysis_time_days,
         "carbon_14_pmc": remain.carbon_14_pmc,
-        "image": remain.image_url,
-        "video": remain.video_url,
-        "image_url": remain.image_url,
-        "video_url": remain.video_url,
+        "image": image_url,
+        "video": video_url,
+        "image_url": image_url,
+        "video_url": video_url,
         "likes_count": likes_count,
     }
 
@@ -108,6 +122,10 @@ async def publish_draft(db, draft, fields):
     draft.description = fields.description
     draft.analysis_time_days = fields.analysis_time_days
     draft.carbon_14_pmc = fields.carbon_14_pmc
+    if draft.image_url == f"{settings.MINIO_URL}/wood.jpg":
+        draft.image_url = DEFAULT_DRAFT_IMAGE
+    if draft.video_url == f"{settings.MINIO_URL}/wood-video.mp4":
+        draft.video_url = DEFAULT_DRAFT_VIDEO
     draft.status = "published"
     draft.published_at = datetime.now(timezone.utc)
     await db.commit()
@@ -142,7 +160,7 @@ async def draft_response(request: Request, draft, values=None, errors=None, stat
         draft_values.update(values)
     return templates.TemplateResponse(
         request=request,
-        name="add.html",
+        name="remains_add.html",
         context=page_context("draft", draft_remains=draft_values, draft_id=draft.id if draft else None, errors=errors or {}),
         status_code=status_code,
     )
@@ -170,7 +188,7 @@ async def remains_feed(request: Request, db: Database, remains_id: int | None = 
         return RedirectResponse(url=f"/remains/feed?remains_id={following}", status_code=303)
     item = remain_values(*row)
     return templates.TemplateResponse(
-        request=request, name="feed.html", context=page_context("feed", remains_item=item, expanded=expanded)
+        request=request, name="remains_feed.html", context=page_context("feed", remains_item=item, expanded=expanded)
     )
 
 
@@ -184,13 +202,55 @@ async def remains_grid(request: Request, db: Database, carbon_min: Decimal = Que
     rows = await get_published_remains(db, carbon_min)
     return templates.TemplateResponse(
         request=request,
-        name="grid.html",
+        name="remains_grid.html",
         context=page_context("grid", remains=[remain_values(*row) for row in rows], carbon_min=carbon_min),
     )
 
 
+async def save_remains_upload(upload: UploadFile | None, kind: str):
+    if upload is None or not upload.filename:
+        return None
+    extension = Path(upload.filename).suffix.lower()
+    if extension not in UPLOAD_EXTENSIONS[kind]:
+        raise HTTPException(status_code=400, detail="Неподдерживаемый формат файла")
+    contents = await upload.read()
+    if not contents:
+        raise HTTPException(status_code=400, detail="Файл пуст")
+    filename = f"remains-{uuid4().hex}{extension}"
+    path = PROJECT_ROOT / "static" / "remains" / filename
+    path.write_bytes(contents)
+    return f"/static/remains/{filename}"
+
+
+def remove_replaced_remains_file(url):
+    if not url or not url.startswith("/static/remains/remains-"):
+        return
+    path = PROJECT_ROOT / "static" / "remains" / Path(url).name
+    if path.is_file():
+        path.unlink()
+
+
+async def update_draft_media(draft, image_file, video_file, db):
+    image_url = await save_remains_upload(image_file, "image")
+    video_url = await save_remains_upload(video_file, "video")
+    if image_url is not None:
+        remove_replaced_remains_file(draft.image_url)
+        draft.image_url = image_url
+    if video_url is not None:
+        remove_replaced_remains_file(draft.video_url)
+        draft.video_url = video_url
+    if image_url is not None or video_url is not None:
+        await db.commit()
+
+
 @router.post("/draft")
-async def create_remains(request: Request, db: Database, title: str = Form("")):
+async def create_remains(
+    request: Request,
+    db: Database,
+    title: str = Form(""),
+    image_file: UploadFile | None = File(default=None),
+    video_file: UploadFile | None = File(default=None),
+):
     if await get_draft_remain(db) is not None:
         return RedirectResponse(url="/remains/draft", status_code=303)
     try:
@@ -198,7 +258,8 @@ async def create_remains(request: Request, db: Database, title: str = Form("")):
     except ValidationError as error:
         return await draft_response(request, None, {"title": title}, form_errors(error), 422)
     try:
-        await create_draft(db, fields.title)
+        draft = await create_draft(db, fields.title)
+        await update_draft_media(draft, image_file, video_file, db)
     except IntegrityError as error:
         await db.rollback()
         if await get_draft_remain(db) is None:
@@ -215,6 +276,8 @@ async def publish_remains(
     description: str = Form(""),
     analysis_time_days: str = Form(""),
     carbon_14_pmc: str = Form(""),
+    image_file: UploadFile | None = File(default=None),
+    video_file: UploadFile | None = File(default=None),
 ):
     draft = await db.scalar(
         select(Remains).where(Remains.id == remains_id, Remains.creator_id == 999, Remains.status == "draft").with_for_update()
@@ -226,6 +289,7 @@ async def publish_remains(
         fields = PublicationFields(**values)
     except ValidationError as error:
         return await draft_response(request, draft, values, form_errors(error), 422)
+    await update_draft_media(draft, image_file, video_file, db)
     await publish_draft(db, draft, fields)
     return RedirectResponse(url=f"/remains/feed?remains_id={draft.id}", status_code=303)
 
