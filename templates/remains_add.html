@@ -10,7 +10,6 @@
     <main class="phone light-screen">
         <header class="page-heading draft-heading">
             <h1>Новый тип<br>останков</h1>
-            <span class="draft-label">Черновик</span>
         </header>
         <form class="remains-form" autocomplete="off">
             <div class="draft-scroll">
@@ -27,13 +26,13 @@
                 </fieldset>
                 <fieldset class="text-fields">
                     <legend class="visually-hidden">Описание и параметры останков</legend>
-                    <label class="form-field"><span>Название останков</span><input name="title" type="text" value="{{ draft_remains.title }}" autocomplete="off"></label>
-                    <label class="form-field"><span>Описание</span><textarea name="description" rows="3" autocomplete="off">{{ draft_remains.description }}</textarea></label>
-                    <label class="form-field"><span>Время анализа, рабочих дней</span><input name="analysis_time_days" type="number" min="1" step="1" value="{{ draft_remains.analysis_time_days }}" autocomplete="off"></label>
-                    <label class="form-field"><span title="Образец: {{ draft_remains.carbon_14_sample }}">Содержание C‑14, pMC</span><input name="carbon_14_pmc" type="number" min="0" step="0.001" value="{{ draft_remains.carbon_14_pmc }}" autocomplete="off"></label>
+                    <label class="form-field"><span>Название останков</span><input name="title" type="text" value="{{ draft_remains.title }}" readonly></label>
+                    <label class="form-field"><span>Описание</span><textarea name="description" rows="3" readonly>{{ draft_remains.description }}</textarea></label>
+                    <label class="form-field"><span>Время анализа, рабочих дней</span><input name="analysis_time_days" type="number" value="{{ draft_remains.analysis_time_days }}" readonly></label>
+                    <label class="form-field"><span title="Образец: {{ draft_remains.carbon_14_sample }}">Содержание C‑14, pMC</span><input name="carbon_14_pmc" type="number" value="{{ draft_remains.carbon_14_pmc }}" readonly></label>
                 </fieldset>
             </div>
-            <button class="submit-button" type="reset">Добавить</button>
+            <button class="submit-button" type="button">Добавить</button>
         </form>
         <nav class="bottom-tabs" aria-label="Разделы">
             <a class="tab" href="/remains/feed">Лента</a>
