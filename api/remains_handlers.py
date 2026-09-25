@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from data.collections import CURRENT_USER_ID, icons, remains
+from data.remains_collection import CURRENT_USER_ID, icons, remains
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 router = APIRouter(prefix="/remains")
@@ -52,7 +52,7 @@ def page_context(active_page: str, **extra):
     return {
         "active_page": active_page,
         "icons": icons,
-        "style_version": (PROJECT_ROOT / "static/css/style.css").stat().st_mtime_ns,
+        "style_version": (PROJECT_ROOT / "static/css/remains.css").stat().st_mtime_ns,
         **extra,
     }
 
@@ -74,7 +74,7 @@ def remains_feed(
     item = prepare_remains_for_template([get_remains_by_id(remains_id)])[0]
     return templates.TemplateResponse(
         request=request,
-        name="feed.html",
+        name="remains_feed.html",
         context=page_context("feed", remains_item=item, expanded=expanded),
     )
 
@@ -86,7 +86,7 @@ def remains_draft(request: Request):
         raise HTTPException(status_code=404, detail="Черновик не найден")
     return templates.TemplateResponse(
         request=request,
-        name="add.html",
+        name="remains_add.html",
         context=page_context("draft", draft_remains=draft_remains),
     )
 
@@ -98,7 +98,7 @@ def remains_grid(request: Request, carbon_min: float = Query(default=0, ge=0, le
     ]
     return templates.TemplateResponse(
         request=request,
-        name="grid.html",
+        name="remains_grid.html",
         context=page_context(
             "grid", remains=prepare_remains_for_template(filtered_remains), carbon_min=carbon_min
         ),

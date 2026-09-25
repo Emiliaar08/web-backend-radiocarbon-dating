@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import uvicorn
 
-from api.handlers import router
+from api.remains_handlers import router
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 app = FastAPI(title="Organic Remains", docs_url=None, redoc_url=None, openapi_url=None)

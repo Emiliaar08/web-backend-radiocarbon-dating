@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавление | Радиоуглеродное датирование</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/remains.css') }}?v={{ style_version }}">
+</head>
+<body>
+    <main class="phone light-screen">
+        <header class="page-heading draft-heading">
+            <h1>Новый тип<br>останков</h1>
+            <span class="draft-label">Черновик</span>
+        </header>
+        <form class="remains-form" autocomplete="off">
+            <div class="draft-scroll">
+                <fieldset class="media-fields">
+                    <legend class="visually-hidden">Фото и видео останков</legend>
+                    <div class="media-field">
+                        <span class="field-caption">Изображение</span>
+                        <img class="draft-photo" src="{{ draft_remains.image }}" alt="{{ draft_remains.title }}">
+                    </div>
+                    <div class="media-field">
+                        <span class="field-caption">Видео</span>
+                        <video class="draft-video" src="{{ draft_remains.video }}" controls muted playsinline preload="metadata" aria-label="Видео: {{ draft_remains.title }}"></video>
+                    </div>
+                </fieldset>
+                <fieldset class="text-fields">
+                    <legend class="visually-hidden">Описание и параметры останков</legend>
+                    <label class="form-field"><span>Название останков</span><input name="title" type="text" value="{{ draft_remains.title }}" autocomplete="off"></label>
+                    <label class="form-field"><span>Описание</span><textarea name="description" rows="3" autocomplete="off">{{ draft_remains.description }}</textarea></label>
+                    <label class="form-field"><span>Время анализа, рабочих дней</span><input name="analysis_time_days" type="number" min="1" step="1" value="{{ draft_remains.analysis_time_days }}" autocomplete="off"></label>
+                    <label class="form-field"><span title="Образец: {{ draft_remains.carbon_14_sample }}">Содержание C‑14, pMC</span><input name="carbon_14_pmc" type="number" min="0" step="0.001" value="{{ draft_remains.carbon_14_pmc }}" autocomplete="off"></label>
+                </fieldset>
+            </div>
+            <button class="submit-button" type="reset">Добавить</button>
+        </form>
+        <nav class="bottom-tabs" aria-label="Разделы">
+            <a class="tab" href="/remains/feed">Лента</a>
+            <a class="tab active" aria-current="page" href="/remains/draft">Добавление</a>
+            <a class="tab" href="/remains">Плитка</a>
+        </nav>
+    </main>
+</body>
+</html>

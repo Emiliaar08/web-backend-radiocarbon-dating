@@ -140,8 +140,8 @@ remains = [
         "carbon_14_pmc": 23.05,
         "carbon_14_sample": "IAEA-C5, Two Creeks Wood",
         "carbon_14_source": "https://analytical-reference-materials.iaea.org/iaea-c-5",
-        "image": f"{MINIO_URL}/wood.jpg",
-        "video": f"{MINIO_URL}/wood-video.mp4",
+        "image": "/static/remains/wood.jpg",
+        "video": "/static/remains/wood-video.mp4",
         "likes": [],
     },
     {
