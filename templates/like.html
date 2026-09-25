@@ -1,7 +1,0 @@
-{% macro like_control(title, count, placement) -%}
-<span class="like-control {{ placement }}" role="img" aria-label="{{ title }}: {{ count }} отметок нравится">
-    <span class="like-text" aria-hidden="true">
-        <span class="heart">♡</span><span>{{ count }}</span>
-    </span>
-</span>
-{%- endmacro %}

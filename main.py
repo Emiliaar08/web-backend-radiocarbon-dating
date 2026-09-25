@@ -2,10 +2,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from starlette.exceptions import HTTPException
 import uvicorn
 
-from api.handlers import page_context, router, templates
+from api.remains_handlers import router
 from core.config import PROJECT_ROOT
 from db.session import engine
 
@@ -24,17 +23,6 @@ async def revalidate_pages(request, call_next):
     response = await call_next(request)
     response.headers["Cache-Control"] = "no-store" if request.url.path.startswith("/remains") else "no-cache"
     return response
-
-
-@app.exception_handler(HTTPException)
-async def http_error(request, error):
-    return templates.TemplateResponse(
-        request=request,
-        name="error.html",
-        context=page_context("grid", status_code=error.status_code, detail=error.detail),
-        status_code=error.status_code,
-        headers=error.headers,
-    )
 
 
 app.mount("/static", StaticFiles(directory=PROJECT_ROOT / "static"), name="static")

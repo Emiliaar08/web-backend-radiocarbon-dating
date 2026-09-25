@@ -159,15 +159,14 @@ button:focus-visible {
     align-items: center;
     justify-content: center;
     margin-top: 10px;
-    width: 104px;
-    height: 36px;
+    width: 42px;
+    height: 34px;
     border: 1px solid #ffffff;
-    border-radius: 8px;
+    border-radius: 10px;
     background: transparent;
     color: #ffffff;
-    font-size: 18px;
+    font-size: 22px;
     font-weight: 200;
-    letter-spacing: 0.2em;
     transition: transform 180ms ease;
 }
 .next-feed-button:hover {
@@ -175,6 +174,9 @@ button:focus-visible {
 }
 .next-feed-button:active {
     transform: scale(0.96);
+}
+.next-feed-button span {
+    transform: translate(0, -1px);
 }
 
 .like-control {
@@ -305,6 +307,48 @@ button:focus-visible {
 }
 .url-field {
     position: relative;
+    width: 42px;
+    height: 30px;
+    margin-top: 3px;
+}
+.file-picker {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    opacity: 0;
+    clip-path: inset(50%);
+}
+.folder-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 30px;
+    border: 1px solid transparent;
+    border-radius: 15px;
+    background: #2a64c5;
+    cursor: pointer;
+    transition:
+        background-color 180ms ease,
+        transform 180ms ease;
+}
+.folder-button img {
+    width: 17px;
+    height: 17px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+}
+.folder-button:hover {
+    background-color: #025aa5;
+    border-color: #01549b;
+}
+.folder-button:active {
+    transform: translateY(1px) scale(0.98);
+}
+.file-picker:focus-visible + .folder-button {
+    outline: 2px solid #316db2;
+    outline-offset: 3px;
 }
 .form-field {
     display: block;
@@ -346,10 +390,6 @@ button:focus-visible {
 .remains-form input:focus,
 .remains-form textarea:focus {
     border-color: #2a64c5;
-}
-.url-field input[type="url"] {
-    padding-left: 13px;
-    font-size: 13px;
 }
 .submit-button {
     position: absolute;
@@ -471,6 +511,24 @@ button:focus-visible {
         background-color 180ms ease,
         transform 180ms ease;
 }
+.delete-button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 30px;
+    border: 1px solid transparent;
+    border-radius: 15px;
+    background: #2a64c5;
+    color: #ffffff;
+    font-size: 21px;
+    font-weight: 400;
+    line-height: 1;
+    transition:
+        background-color 180ms ease,
+        transform 180ms ease;
+}
 .find-button::before,
 .find-button::after {
     content: "";
@@ -494,13 +552,15 @@ button:focus-visible {
     transform-origin: left center;
 }
 .submit-button:hover,
-.find-button:hover {
+.find-button:hover,
+.delete-button:hover {
     color: #ffffff;
     background-color: #025aa5;
     border-color: #01549b;
 }
 .submit-button:active,
-.find-button:active {
+.find-button:active,
+.delete-button:active {
     transform: translateY(1px) scale(0.98);
 }
 
@@ -592,29 +652,6 @@ button:focus-visible {
     margin: 0;
 }
 
-.delete-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border: 0;
-    border-radius: 7px;
-    background: #ffffff;
-    color: #454545;
-    font-size: 22px;
-    line-height: 1;
-    transition: background-color 180ms ease, transform 180ms ease;
-}
-
-.delete-button:hover {
-    background: #ffe5e5;
-}
-
-.delete-button:active {
-    transform: scale(0.94);
-}
-
 .form-error,
 .field-error {
     color: #b42318;
@@ -628,25 +665,6 @@ button:focus-visible {
 
 .remains-form [aria-invalid="true"] {
     border-color: #b42318;
-}
-
-.error-state {
-    padding: 64px 28px;
-}
-
-.error-state h1 {
-    color: #316db2;
-    font-size: 36px;
-}
-
-.error-state p {
-    font-size: 18px;
-    line-height: 1.5;
-}
-
-.error-state a {
-    color: #2a64c5;
-    text-decoration: underline;
 }
 
 .bottom-tabs {

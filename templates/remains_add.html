@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавление | Радиоуглеродное датирование</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/remains.css') }}?v={{ style_version }}">
+</head>
+<body>
+    <main class="phone light-screen">
+        <header class="page-heading draft-heading">
+            <h1>Новый тип<br>останков</h1>
+            {% if draft_id %}<span class="draft-label">Черновик</span>{% endif %}
+        </header>
+        <form id="remains-fields" class="remains-form" action="{{ '/remains/' ~ draft_id ~ '/publish' if draft_id else '/remains/draft' }}" method="post" enctype="multipart/form-data" autocomplete="off">
+            <div class="draft-scroll">
+                {% if errors %}<p class="form-error" role="alert">Проверьте выделенные поля.</p>{% endif %}
+                <fieldset class="media-fields">
+                    <legend class="visually-hidden">Фото и видео останков</legend>
+                    <div class="media-field">
+                        <span class="field-caption">Изображение</span>
+                        <img class="draft-photo" src="{{ draft_remains.image }}" alt="{{ draft_remains.title or 'Образец древесины' }}">
+                        <div class="url-field">
+                            <input class="file-picker" id="image_file" name="image_file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" aria-label="Выбрать фото">
+                            <label class="folder-button" for="image_file" aria-label="Выбрать фото"><img src="{{ icons.folder }}" alt=""></label>
+                        </div>
+                    </div>
+                    <div class="media-field">
+                        <span class="field-caption">Видео</span>
+                        <video class="draft-video" src="{{ draft_remains.video }}" controls muted playsinline preload="metadata" aria-label="Видео образца"></video>
+                        <div class="url-field">
+                            <input class="file-picker" id="video_file" name="video_file" type="file" accept="video/mp4,video/quicktime,video/webm" aria-label="Выбрать видео">
+                            <label class="folder-button" for="video_file" aria-label="Выбрать видео"><img src="{{ icons.folder }}" alt=""></label>
+                        </div>
+                    </div>
+                </fieldset>
+                <fieldset class="text-fields">
+                    <legend class="visually-hidden">Описание и параметры останков</legend>
+                    <label class="form-field"><span>Название останков</span><input name="title" type="text" value="{{ draft_remains.title }}" maxlength="120" required {% if errors.title %}aria-invalid="true" aria-describedby="title-error"{% endif %}></label>
+                    {% if errors.title %}<p id="title-error" class="field-error">{{ errors.title }}</p>{% endif %}
+                    {% if draft_id %}
+                    <label class="form-field"><span>Описание</span><textarea name="description" rows="3" maxlength="2000" required {% if errors.description %}aria-invalid="true" aria-describedby="description-error"{% endif %}>{{ draft_remains.description }}</textarea></label>
+                    {% if errors.description %}<p id="description-error" class="field-error">{{ errors.description }}</p>{% endif %}
+                    <label class="form-field"><span>Время анализа, рабочих дней</span><input name="analysis_time_days" type="number" min="1" max="36500" step="1" value="{{ draft_remains.analysis_time_days if draft_remains.analysis_time_days is not none else '' }}" required {% if errors.analysis_time_days %}aria-invalid="true" aria-describedby="days-error"{% endif %}></label>
+                    {% if errors.analysis_time_days %}<p id="days-error" class="field-error">{{ errors.analysis_time_days }}</p>{% endif %}
+                    <label class="form-field"><span>Содержание C‑14, pMC</span><input name="carbon_14_pmc" type="number" min="0" max="200" step="0.001" value="{{ draft_remains.carbon_14_pmc if draft_remains.carbon_14_pmc is not none else '' }}" required {% if errors.carbon_14_pmc %}aria-invalid="true" aria-describedby="carbon-error"{% endif %}></label>
+                    {% if errors.carbon_14_pmc %}<p id="carbon-error" class="field-error">{{ errors.carbon_14_pmc }}</p>{% endif %}
+                    {% endif %}
+                </fieldset>
+            </div>
+            <button class="submit-button" type="submit">{{ 'Опубликовать' if draft_id else 'Далее' }}</button>
+        </form>
+        <nav class="bottom-tabs" aria-label="Разделы">
+            <a class="tab" href="/remains/feed">Лента</a>
+            <a class="tab active" aria-current="page" href="/remains/draft">Добавление</a>
+            <a class="tab" href="/remains">Плитка</a>
+        </nav>
+    </main>
+</body>
+</html>

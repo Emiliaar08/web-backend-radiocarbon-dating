@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Плитка | Радиоуглеродное датирование</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/remains.css') }}?v={{ style_version }}">
+</head>
+<body>
+    <main class="phone light-screen">
+        <header class="page-heading"><h1>Типы органических<br>останков</h1></header>
+        <form class="carbon-filter" action="/remains" method="get">
+            <label for="carbon_min">Содержание C‑14, pMC</label>
+            <div class="filter-controls">
+                <div class="range-field">
+                    <input id="carbon_min" name="carbon_min" type="range" min="0" max="200" step="0.1" value="{{ '%g' | format(carbon_min) }}" list="carbon-ticks">
+                    <datalist id="carbon-ticks"><option value="0"></option><option value="50"></option><option value="100"></option><option value="150"></option><option value="200"></option></datalist>
+                    <div class="range-scale" aria-hidden="true"><span>0</span><span>50</span><span>100</span><span>150</span><span>200</span></div>
+                </div>
+                <button class="find-button" type="submit" aria-label="Найти" title="Найти"></button>
+            </div>
+            <p class="filter-value">От <output class="range-value" for="carbon_min" aria-hidden="true"><span>{{ '%g' | format(carbon_min) }}</span></output> pMC</p>
+        </form>
+        <section class="remains-grid" aria-label="Органические останки">
+            {% for remains_item in remains %}
+            <article class="remains-card">
+                <a href="/remains/feed?remains_id={{ remains_item.id }}" class="card-link">
+                    <img src="{{ remains_item.image }}" alt="{{ remains_item.title }}">
+                    <div class="card-copy">
+                        <h2>{{ remains_item.title }}</h2>
+                        <p>C‑14: {{ '%g' | format(remains_item.carbon_14_pmc) }} pMC</p>
+                        <p>Анализ: {{ remains_item.analysis_time_days }} раб. дней</p>
+                    </div>
+                </a>
+                <span class="like-control card-like" role="img" aria-label="{{ remains_item.likes_count }} отметок нравится"><span class="like-text" aria-hidden="true"><span class="heart">♡</span><span>{{ remains_item.likes_count }}</span></span></span>
+                <form class="delete-form" action="/remains/{{ remains_item.id }}/delete" method="post">
+                    <input type="hidden" name="carbon_min" value="{{ carbon_min }}">
+                    <button class="delete-button" type="submit" aria-label="Удалить: {{ remains_item.title }}" title="Удалить: {{ remains_item.title }}">×</button>
+                </form>
+            </article>
+            {% else %}
+            <p class="empty-state">Ничего не найдено</p>
+            {% endfor %}
+        </section>
+        <nav class="bottom-tabs" aria-label="Разделы">
+            <a class="tab" href="/remains/feed">Лента</a>
+            <a class="tab" href="/remains/draft">Добавление</a>
+            <a class="tab active" aria-current="page" href="/remains">Плитка</a>
+        </nav>
+    </main>
+</body>
+</html>

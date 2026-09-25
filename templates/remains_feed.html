@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ remains_item.title }} | Радиоуглеродное датирование</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/remains.css') }}?v={{ style_version }}">
+</head>
+<body>
+    <main class="phone feed-screen">
+        <video class="feed-video" autoplay muted loop playsinline preload="auto" aria-label="{{ remains_item.title }}"><source src="{{ remains_item.video }}"></video>
+        <div class="feed-shade"></div>
+        <aside class="feed-parameters" aria-label="Параметры останков">
+            <span class="like-control feed-like" role="img" aria-label="{{ remains_item.likes_count }} отметок нравится"><span class="like-text" aria-hidden="true"><span class="heart">♡</span><span>{{ remains_item.likes_count }}</span></span></span>
+            <div class="feed-fact"><img src="{{ icons.carbon }}" alt=""><strong>{{ '%g' | format(remains_item.carbon_14_pmc) }} pMC</strong><span>Содержание C‑14</span></div>
+            <div class="feed-fact"><img src="{{ icons.analysis_time }}" alt=""><strong>{{ remains_item.analysis_time_days }} раб. дней</strong><span>Время анализа</span></div>
+            <a class="next-feed-button" href="/remains/feed?remains_id={{ remains_item.id }}&amp;next=true" aria-label="Следующий останок" title="Следующий останок"><span aria-hidden="true">→</span></a>
+        </aside>
+        <section class="feed-copy {{ 'expanded' if expanded else '' }}">
+            <img class="feed-photo" src="{{ remains_item.image }}" alt="{{ remains_item.title }}">
+            <h1>{{ remains_item.title }}</h1>
+            <p>{{ remains_item.description }}</p>
+            <a class="expand-button" href="/remains/feed?remains_id={{ remains_item.id }}&amp;expanded={{ 'false' if expanded else 'true' }}" aria-expanded="{{ 'true' if expanded else 'false' }}">{{ 'Свернуть' if expanded else 'Развернуть' }}</a>
+        </section>
+        <nav class="bottom-tabs" aria-label="Разделы">
+            <a class="tab active" aria-current="page" href="/remains/feed">Лента</a>
+            <a class="tab" href="/remains/draft">Добавление</a>
+            <a class="tab" href="/remains">Плитка</a>
+        </nav>
+    </main>
+</body>
+</html>
