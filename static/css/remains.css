@@ -159,14 +159,15 @@ button:focus-visible {
     align-items: center;
     justify-content: center;
     margin-top: 10px;
-    width: 42px;
+    width: 116px;
     height: 34px;
     border: 1px solid #ffffff;
     border-radius: 10px;
     background: transparent;
     color: #ffffff;
-    font-size: 22px;
-    font-weight: 200;
+    font-size: 15px;
+    font-weight: 300;
+    letter-spacing: 0.02em;
     transition: transform 180ms ease;
 }
 .next-feed-button:hover {
@@ -175,10 +176,6 @@ button:focus-visible {
 .next-feed-button:active {
     transform: scale(0.96);
 }
-.next-feed-button span {
-    transform: translate(0, -1px);
-}
-
 .like-control {
     position: relative;
     display: block;
@@ -223,35 +220,6 @@ button:focus-visible {
 .draft-heading {
     padding-bottom: 32px;
 }
-.draft-label {
-    position: absolute;
-    right: 4px;
-    bottom: 0;
-    color: #64686f;
-    font-size: 17px;
-    font-weight: 300;
-    letter-spacing: 0.2em;
-}
-.draft-label::before,
-.draft-label::after {
-    content: "";
-    position: absolute;
-    background: #64686f;
-    opacity: 0.5;
-}
-.draft-label::before {
-    left: -15px;
-    right: -12px;
-    bottom: -4px;
-    height: 1px;
-}
-.draft-label::after {
-    right: -4px;
-    top: -24px;
-    bottom: -16px;
-    width: 1px;
-}
-
 .remains-form {
     position: absolute;
     top: 176px;

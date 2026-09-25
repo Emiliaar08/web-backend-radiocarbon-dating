@@ -14,7 +14,7 @@
             <span class="like-control feed-like" role="img" aria-label="{{ remains_item.likes_count }} отметок нравится"><span class="like-text" aria-hidden="true"><span class="heart">♡</span><span>{{ remains_item.likes_count }}</span></span></span>
             <div class="feed-fact"><img src="{{ icons.carbon }}" alt=""><strong>{{ '%g' | format(remains_item.carbon_14_pmc) }} pMC</strong><span>Содержание C‑14</span></div>
             <div class="feed-fact"><img src="{{ icons.analysis_time }}" alt=""><strong>{{ remains_item.analysis_time_days }} раб. дней</strong><span>Время анализа</span></div>
-            <a class="next-feed-button" href="/remains/feed?remains_id={{ remains_item.id }}&amp;next=true" aria-label="Следующий останок" title="Следующий останок"><span aria-hidden="true">→</span></a>
+            <a class="next-feed-button" href="/remains/feed?remains_id={{ remains_item.id }}&amp;next=true" aria-label="Следующий" title="Следующий">Следующий</a>
         </aside>
         <section class="feed-copy {{ 'expanded' if expanded else '' }}">
             <img class="feed-photo" src="{{ remains_item.image }}" alt="{{ remains_item.title }}">
