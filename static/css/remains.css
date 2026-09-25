@@ -254,35 +254,6 @@ button:focus-visible {
     letter-spacing: 0.08em;
     overflow-wrap: anywhere;
 }
-.draft-label {
-    position: absolute;
-    right: 4px;
-    bottom: 0;
-    color: #64686f;
-    font-size: 17px;
-    font-weight: 300;
-    letter-spacing: 0.2em;
-}
-.draft-label::before,
-.draft-label::after {
-    content: "";
-    position: absolute;
-    background: #64686f;
-    opacity: 0.5;
-}
-.draft-label::before {
-    left: -15px;
-    right: -12px;
-    bottom: -4px;
-    height: 1px;
-}
-.draft-label::after {
-    right: -4px;
-    top: -24px;
-    bottom: -16px;
-    width: 1px;
-}
-
 .remains-form {
     position: absolute;
     top: 176px;
