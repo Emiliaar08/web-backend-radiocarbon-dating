@@ -1,0 +1,7 @@
+# Use this workspace to collaborate
+workspace:
+  id: 0693ff08-e186-4c44-8f98-50104f3cce09
+
+localResources:
+  collections:
+    - ../remains-api.postman_collection.json

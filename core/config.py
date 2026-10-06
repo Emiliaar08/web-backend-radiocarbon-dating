@@ -14,6 +14,11 @@ class Settings(BaseSettings):
     DB_NAME: str
 
     MINIO_URL: str = "http://localhost:9000/remains"
+    MINIO_ENDPOINT: str = "localhost:9000"
+    MINIO_ACCESS_KEY: str = "root"
+    MINIO_SECRET_KEY: str = "rootpassword"
+    MINIO_BUCKET: str = "remains"
+    MINIO_USE_SSL: bool = False
 
     model_config = SettingsConfigDict(env_file=PROJECT_ROOT / ".env", env_file_encoding="utf-8")
 

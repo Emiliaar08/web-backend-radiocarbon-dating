@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 
+from api.remains_api import router as api_router
 from api.remains_handlers import router
 from core.config import PROJECT_ROOT
 from db.session import engine
@@ -15,7 +16,13 @@ async def lifespan(app):
     await engine.dispose()
 
 
-app = FastAPI(title="Organic Remains", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
+app = FastAPI(
+    title="Radiocarbon Dating API",
+    docs_url="/api/docs",
+    redoc_url=None,
+    openapi_url="/api/openapi.json",
+    lifespan=lifespan,
+)
 
 
 @app.middleware("http")
@@ -27,6 +34,7 @@ async def revalidate_pages(request, call_next):
 
 app.mount("/static", StaticFiles(directory=PROJECT_ROOT / "static"), name="static")
 app.include_router(router)
+app.include_router(api_router)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
