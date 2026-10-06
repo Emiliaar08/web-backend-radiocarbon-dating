@@ -9,3 +9,4 @@ class Researchers(Base):
     id = Column(Integer, primary_key=True)
     username = Column(String(80), nullable=False, unique=True)
     full_name = Column(String(160), nullable=False)
+    password = Column(String(255), nullable=False)
