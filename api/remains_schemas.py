@@ -40,16 +40,17 @@ class ResearcherCreateRequest(BaseModel):
 
 
 class ResearcherAuthRequest(BaseModel):
-    username: str
-    password: SecretStr
+    username: Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=80)]
+    password: SecretStr = Field(min_length=8, max_length=128)
 
 
 class ResearcherResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     username: str
     full_name: str
 
 
-class MessageResponse(BaseModel):
+class ResearcherSessionResponse(ResearcherResponse):
     message: str
-    implemented: bool = True

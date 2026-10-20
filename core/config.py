@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     MINIO_SECRET_KEY: str = "rootpassword"
     MINIO_BUCKET: str = "remains"
     MINIO_USE_SSL: bool = False
+    REDIS_URL: str = "redis://localhost:6379/0"
+    SESSION_COOKIE_NAME: str = "radiocarbon_session"
+    SESSION_TTL_SECONDS: int = 86400
+    SESSION_COOKIE_SECURE: bool = False
 
     model_config = SettingsConfigDict(env_file=PROJECT_ROOT / ".env", env_file_encoding="utf-8")
 

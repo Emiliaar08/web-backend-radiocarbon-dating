@@ -1,0 +1,16 @@
+$kind: http-request
+description: После успешной публикации скопируйте id ответа в переменную published_id.
+url: "{{base_url}}/api/remains/{{draft_id}}/publish"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "description": "Радиоуглеродное датирование древесины после очистки от загрязнений. Измерение содержания C-14 позволяет оценить возраст образца и сопоставить результат с археологическим контекстом.",
+      "analysis_time_days": 14,
+      "carbon_14_pmc": 1.385
+    }
+settings: {}
+order: 6000

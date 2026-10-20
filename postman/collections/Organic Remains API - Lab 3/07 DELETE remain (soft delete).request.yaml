@@ -1,0 +1,5 @@
+$kind: http-request
+url: "{{base_url}}/api/remains/{{published_id}}"
+method: DELETE
+settings: {}
+order: 9000

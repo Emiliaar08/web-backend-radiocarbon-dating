@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{base_url}}/api/remains/{{published_id}}/likes"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "liked": 1
+    }
+settings: {}
+order: 8000

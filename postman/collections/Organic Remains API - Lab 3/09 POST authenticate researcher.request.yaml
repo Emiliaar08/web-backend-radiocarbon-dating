@@ -1,0 +1,15 @@
+$kind: http-request
+description: Checks the password, creates a Redis session and sets an HttpOnly cookie that Postman sends on later requests.
+url: "{{base_url}}/api/researchers/auth"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "username": "lab3_researcher_demo",
+      "password": "Radiocarbon-2026"
+    }
+settings: {}
+order: 2000

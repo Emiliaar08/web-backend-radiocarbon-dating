@@ -1,0 +1,9 @@
+$kind: http-request
+url: "{{base_url}}/api/remains?carbon_min=0&carbon_max=200&title=о"
+method: GET
+queryParams:
+  carbon_min: "0"
+  carbon_max: "200"
+  title: о
+settings: {}
+order: 3000

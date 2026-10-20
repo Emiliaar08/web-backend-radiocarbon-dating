@@ -1,0 +1,6 @@
+$kind: collection
+description: 10 API methods (3 GET, 5 POST, 1 PUT, 1 DELETE). Feed modes use the same GET request with optional remains_id and next query parameters.
+variables:
+  base_url: http://127.0.0.1:8002
+  draft_id: "20"
+  published_id: "20"

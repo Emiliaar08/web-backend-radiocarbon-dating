@@ -1,0 +1,20 @@
+$kind: http-request
+description: Выберите image_file и video_file через Select Files. Скопируйте id из ответа в переменную draft_id.
+url: "{{base_url}}/api/remains/draft"
+method: POST
+body:
+  type: formdata
+  content:
+    - type: text
+      key: title
+      value: Лабораторный образец
+    - type: file
+      key: image_file
+      src:
+        - /Users/emiliaalieva/web-backend-radiocarbon-dating/static/remains/wood.jpg
+    - type: file
+      key: video_file
+      src:
+        - /Users/emiliaalieva/web-backend-radiocarbon-dating/static/remains/wood-video.mp4
+settings: {}
+order: 4000

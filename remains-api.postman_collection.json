@@ -1,12 +1,40 @@
 {
   "info": {
-    "name": "Organic Remains API - Lab 3",
-    "description": "10 REST requests for the radiocarbon dating remains service. After creating a draft, copy its id into draft_id. After publishing, copy its id into published_id.",
+    "name": "Organic Remains API - Lab 4",
+    "description": "Lab 4 flow: register, authenticate, read public remains, create and publish a draft, browse the feed, like and soft-delete a remain. Postman stores the session cookie from the authentication response automatically.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "01 GET filtered remains",
+      "name": "01 POST register researcher",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"lab4_researcher_demo\",\n  \"full_name\": \"Лабораторный исследователь\",\n  \"password\": \"Radiocarbon-2026\"\n}",
+          "options": {"raw": {"language": "json"}}
+        },
+        "url": "{{base_url}}/api/researchers",
+        "description": "При повторном запуске замените username на новый уникальный логин."
+      }
+    },
+    {
+      "name": "02 POST authenticate researcher",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"lab4_researcher_demo\",\n  \"password\": \"Radiocarbon-2026\"\n}",
+          "options": {"raw": {"language": "json"}}
+        },
+        "url": "{{base_url}}/api/researchers/auth",
+        "description": "Ответ устанавливает HttpOnly cookie, которую Postman отправляет в следующих запросах к этому host."
+      }
+    },
+    {
+      "name": "03 GET filtered remains",
       "request": {
         "method": "GET",
         "header": [],
@@ -14,7 +42,7 @@
       }
     },
     {
-      "name": "02 POST create remain with image and video",
+      "name": "04 POST create remain with image and video",
       "request": {
         "method": "POST",
         "header": [],
@@ -27,11 +55,11 @@
           ]
         },
         "url": "{{base_url}}/api/remains/draft",
-        "description": "Выберите image_file и video_file через Select Files. Скопируйте id из ответа в переменную draft_id."
+        "description": "Выберите image_file и video_file. Скопируйте id из ответа в переменную draft_id."
       }
     },
     {
-      "name": "03 GET current draft",
+      "name": "05 GET current draft",
       "request": {
         "method": "GET",
         "header": [],
@@ -39,37 +67,39 @@
       }
     },
     {
-      "name": "04 PUT publish remain",
+      "name": "06 PUT publish remain",
       "request": {
         "method": "PUT",
         "header": [{"key": "Content-Type", "value": "application/json"}],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"description\": \"Радиоуглеродное датирование древесины после очистки от загрязнений. Измерение содержания C-14 позволяет оценить возраст образца и сопоставить результат с археологическим контекстом.\",\n  \"analysis_time_days\": 14,\n  \"carbon_14_pmc\": 1.385\n}",
+          "raw": "{\n  \"description\": \"Радиоуглеродное датирование древесины после очистки от загрязнений. Измерение содержания C-14 помогает оценить возраст образца.\",\n  \"analysis_time_days\": 14,\n  \"carbon_14_pmc\": 1.385\n}",
           "options": {"raw": {"language": "json"}}
         },
         "url": "{{base_url}}/api/remains/{{draft_id}}/publish",
-        "description": "После успешной публикации скопируйте id ответа в переменную published_id."
+        "description": "Укажите id черновика из ответа предыдущего запроса."
       }
     },
     {
-      "name": "05 GET first remain in feed",
+      "name": "07 GET remains feed",
       "request": {
         "method": "GET",
         "header": [],
-        "url": "{{base_url}}/api/remains/feed"
+        "url": "{{base_url}}/api/remains/feed",
+        "description": "Без параметров возвращает первую опубликованную запись."
       }
     },
     {
-      "name": "06 GET next remain in feed",
+      "name": "08 GET next remain in feed",
       "request": {
         "method": "GET",
         "header": [],
-        "url": "{{base_url}}/api/remains/feed?remains_id={{published_id}}&next=true"
+        "url": "{{base_url}}/api/remains/feed?remains_id={{published_id}}&next=true",
+        "description": "Передайте ID опубликованной записи в переменной published_id."
       }
     },
     {
-      "name": "07 POST like remain",
+      "name": "09 POST like remain",
       "request": {
         "method": "POST",
         "header": [{"key": "Content-Type", "value": "application/json"}],
@@ -82,37 +112,16 @@
       }
     },
     {
-      "name": "08 GET remain by id",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{base_url}}/api/remains/{{published_id}}"
-      }
-    },
-    {
-      "name": "09 DELETE remain (soft delete)",
+      "name": "10 DELETE remain (soft delete)",
       "request": {
         "method": "DELETE",
         "header": [],
         "url": "{{base_url}}/api/remains/{{published_id}}"
       }
-    },
-    {
-      "name": "10 POST register researcher",
-      "request": {
-        "method": "POST",
-        "header": [{"key": "Content-Type", "value": "application/json"}],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"username\": \"lab3_researcher_demo\",\n  \"full_name\": \"Лабораторный исследователь\",\n  \"password\": \"Radiocarbon-2026\"\n}",
-          "options": {"raw": {"language": "json"}}
-        },
-        "url": "{{base_url}}/api/researchers"
-      }
     }
   ],
   "variable": [
-    {"key": "base_url", "value": "http://127.0.0.1:8000"},
+    {"key": "base_url", "value": "http://127.0.0.1:8002"},
     {"key": "draft_id", "value": ""},
     {"key": "published_id", "value": ""}
   ]

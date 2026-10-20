@@ -1,7 +1,8 @@
-# Use this workspace to collaborate
 workspace:
   id: 0693ff08-e186-4c44-8f98-50104f3cce09
-
 localResources:
   collections:
     - ../remains-api.postman_collection.json
+cloudResources:
+  collections:
+    ../postman/collections/Organic Remains API - Lab 3: 54553458-f4110b5d-9d31-4d10-868c-71bf042ceb50

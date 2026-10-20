@@ -2,18 +2,24 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from redis.asyncio import Redis
 import uvicorn
 
 from api.remains_api import router as api_router
 from api.remains_handlers import router
-from core.config import PROJECT_ROOT
+from core.config import PROJECT_ROOT, settings
 from db.session import engine
 
 
 @asynccontextmanager
 async def lifespan(app):
-    yield
-    await engine.dispose()
+    app.state.redis = Redis.from_url(settings.REDIS_URL, decode_responses=True)
+    try:
+        await app.state.redis.ping()
+        yield
+    finally:
+        await app.state.redis.aclose()
+        await engine.dispose()
 
 
 app = FastAPI(

@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{base_url}}/api/researchers"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "username": "lab3_researcher_demo",
+      "full_name": "Лабораторный исследователь",
+      "password": "Radiocarbon-2026"
+    }
+settings: {}
+order: 1000

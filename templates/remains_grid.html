@@ -32,11 +32,18 @@
                         <p>Анализ: {{ remains_item.analysis_time_days }} раб. дней</p>
                     </div>
                 </a>
-                <span class="like-control card-like" role="img" aria-label="{{ remains_item.likes_count }} отметок нравится"><span class="like-text" aria-hidden="true"><span class="heart">♡</span><span>{{ remains_item.likes_count }}</span></span></span>
+                <form class="like-form" action="/remains/{{ remains_item.id }}/likes" method="post">
+                    <input type="hidden" name="liked" value="{{ 0 if remains_item.is_liked else 1 }}">
+                    <input type="hidden" name="view" value="grid">
+                    <input type="hidden" name="carbon_min" value="{{ carbon_min }}">
+                    <button class="like-control card-like" type="submit" aria-pressed="{{ 'true' if remains_item.is_liked else 'false' }}" aria-label="{{ 'Убрать лайк' if remains_item.is_liked else 'Поставить лайк' }}: {{ remains_item.title }}"><span class="like-text" aria-hidden="true"><span class="heart">{{ '♥' if remains_item.is_liked else '♡' }}</span><span>{{ remains_item.likes_count }}</span></span></button>
+                </form>
+                {% if remains_item.is_mine %}
                 <form class="delete-form" action="/remains/{{ remains_item.id }}/delete" method="post">
                     <input type="hidden" name="carbon_min" value="{{ carbon_min }}">
                     <button class="delete-button" type="submit" aria-label="Удалить: {{ remains_item.title }}" title="Удалить: {{ remains_item.title }}">×</button>
                 </form>
+                {% endif %}
             </article>
             {% else %}
             <p class="empty-state">Ничего не найдено</p>

@@ -1,0 +1,6 @@
+$kind: http-request
+description: Deletes the Redis session and clears the browser cookie.
+url: "{{base_url}}/api/researchers/logout"
+method: POST
+settings: {}
+order: 10000

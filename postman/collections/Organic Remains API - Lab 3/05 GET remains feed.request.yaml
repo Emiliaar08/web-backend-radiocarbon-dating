@@ -1,0 +1,6 @@
+$kind: http-request
+description: Without query parameters returns the first published remain. Set remains_id={{published_id}} for a specific remain; add next=true for the next remain. The request body stays empty.
+url: "{{base_url}}/api/remains/feed"
+method: GET
+settings: {}
+order: 7000
