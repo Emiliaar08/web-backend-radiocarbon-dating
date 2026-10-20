@@ -178,10 +178,26 @@ button:focus-visible {
 .next-feed-button span {
     transform: translate(0, -1px);
 }
+.like-form {
+    margin: 0;
+}
 .like-control {
     position: relative;
     display: block;
     flex-shrink: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    transition: transform 180ms ease;
+}
+.like-control:hover {
+    transform: scale(1.06);
+}
+.like-control:active {
+    transform: scale(0.94);
+}
+.card-like[aria-pressed="true"] .heart {
+    color: #2a64c5;
 }
 .like-text {
     display: inline-flex;
@@ -555,11 +571,11 @@ button:focus-visible {
         transform 180ms ease,
         box-shadow 180ms ease;
 }
-.remains-card:hover:not(:has(.delete-form:hover)) {
+.remains-card:hover:not(:has(.delete-form:hover, .like-form:hover)) {
     transform: translateY(-3px);
     box-shadow: 0 6px 10px rgba(17, 25, 39, 0.2);
 }
-.remains-card:active:not(:has(.delete-form:active)) {
+.remains-card:active:not(:has(.delete-form:active, .like-form:active)) {
     transform: scale(0.98);
 }
 .card-link {

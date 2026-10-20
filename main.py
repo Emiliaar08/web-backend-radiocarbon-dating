@@ -18,9 +18,9 @@ async def lifespan(app):
 
 app = FastAPI(
     title="Radiocarbon Dating API",
-    docs_url="/api/docs",
+    docs_url=None,
     redoc_url=None,
-    openapi_url="/api/openapi.json",
+    openapi_url=None,
     lifespan=lifespan,
 )
 
@@ -33,7 +33,7 @@ async def revalidate_pages(request, call_next):
 
 
 app.mount("/static", StaticFiles(directory=PROJECT_ROOT / "static"), name="static")
-app.include_router(router)
+app.include_router(router, include_in_schema=False)
 app.include_router(api_router)
 
 if __name__ == "__main__":

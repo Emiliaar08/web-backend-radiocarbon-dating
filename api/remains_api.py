@@ -26,6 +26,7 @@ from api.remains_schemas import (
     LikeRequest,
     MessageResponse,
     PublishRemainRequest,
+    RemainFeedResponse,
     RemainResponse,
     ResearcherAuthRequest,
     ResearcherCreateRequest,
@@ -41,6 +42,7 @@ MAX_IMAGE_SIZE = 8 * 1024 * 1024
 MAX_VIDEO_SIZE = 32 * 1024 * 1024
 
 
+@lru_cache(maxsize=1)
 def current_researcher_id() -> int:
     return CURRENT_RESEARCHER_ID
 
@@ -171,6 +173,128 @@ async def get_published_row(db: AsyncSession, remain_id: int, researcher_id: int
     return result.first()
 
 
+async def create_draft_record(
+    db: AsyncSession,
+    researcher: Researchers,
+    title: str,
+    image_file: UploadFile | None,
+    video_file: UploadFile | None,
+    default_image_url: str | None = None,
+    default_video_url: str | None = None,
+) -> Remains:
+    existing = await db.scalar(
+        select(Remains.id).where(Remains.creator_id == researcher.id, Remains.status == "draft")
+    )
+    if existing is not None:
+        raise HTTPException(status_code=409, detail="У пользователя уже есть черновик")
+    image_name = None
+    video_name = None
+    if image_file is not None and image_file.filename:
+        image_url, image_name = await upload_to_minio(image_file, "image")
+    elif default_image_url:
+        image_url = default_image_url
+    else:
+        raise HTTPException(status_code=422, detail="Изображение обязательно")
+    try:
+        if video_file is not None and video_file.filename:
+            video_url, video_name = await upload_to_minio(video_file, "video")
+        elif default_video_url:
+            video_url = default_video_url
+        else:
+            raise HTTPException(status_code=422, detail="Видео обязательно")
+    except Exception:
+        if image_name:
+            await run_in_threadpool(remove_minio_file, image_name)
+        raise
+    draft = Remains(
+        title=title.strip(),
+        status="draft",
+        image_url=image_url,
+        video_url=video_url,
+        creator_id=researcher.id,
+    )
+    db.add(draft)
+    try:
+        await db.commit()
+        await db.refresh(draft)
+    except IntegrityError as error:
+        await db.rollback()
+        if image_name:
+            await run_in_threadpool(remove_minio_file, image_name)
+        if video_name:
+            await run_in_threadpool(remove_minio_file, video_name)
+        raise HTTPException(status_code=409, detail="Черновик уже создан") from error
+    return draft
+
+
+async def publish_draft_record(
+    remain_id: int,
+    researcher_id: int,
+    fields: PublishRemainRequest,
+    db: AsyncSession,
+) -> Remains | None:
+    draft = await db.scalar(
+        select(Remains)
+        .where(
+            Remains.id == remain_id,
+            Remains.creator_id == researcher_id,
+            Remains.status == "draft",
+        )
+        .with_for_update()
+    )
+    if draft is None:
+        return None
+    for field_name in ("description", "analysis_time_days", "carbon_14_pmc"):
+        stored_value = getattr(draft, field_name)
+        if stored_value is not None and stored_value != "" and stored_value != getattr(fields, field_name):
+            raise HTTPException(status_code=409, detail="Заполненные поля черновика нельзя изменять")
+    draft.description = fields.description
+    draft.analysis_time_days = fields.analysis_time_days
+    draft.carbon_14_pmc = fields.carbon_14_pmc
+    draft.status = "published"
+    draft.published_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(draft)
+    return draft
+
+
+async def soft_delete_remain(remain_id: int, researcher_id: int, db: AsyncSession) -> bool:
+    result = await db.execute(
+        update(Remains)
+        .where(
+            Remains.id == remain_id,
+            Remains.creator_id == researcher_id,
+            Remains.status == "published",
+        )
+        .values(status="deleted")
+        .returning(Remains.id)
+    )
+    if result.scalar_one_or_none() is None:
+        return False
+    await db.commit()
+    return True
+
+
+async def set_remain_like_record(remain_id: int, researcher_id: int, liked: int, db: AsyncSession) -> bool:
+    remain = await db.scalar(
+        select(Remains).where(Remains.id == remain_id, Remains.status == "published").with_for_update()
+    )
+    if remain is None:
+        return False
+    existing = await db.scalar(
+        select(RemainsLikes).where(
+            RemainsLikes.researcher_id == researcher_id,
+            RemainsLikes.remains_id == remain_id,
+        )
+    )
+    if liked == 1 and existing is None:
+        db.add(RemainsLikes(researcher_id=researcher_id, remains_id=remain_id))
+    elif liked == 0 and existing is not None:
+        await db.delete(existing)
+    await db.commit()
+    return True
+
+
 @router.get("/remains", response_model=list[RemainResponse], tags=["Останки"])
 async def list_remains(
     db: Database,
@@ -192,7 +316,7 @@ async def list_remains(
     return [serialize_remain(row, researcher.id) for row in result.all()]
 
 
-@router.get("/remains/feed", response_model=RemainResponse, tags=["Останки"])
+@router.get("/remains/feed", response_model=RemainFeedResponse, tags=["Останки"])
 async def get_remains_feed(
     db: Database,
     researcher: CurrentResearcher,
@@ -248,42 +372,8 @@ async def create_remains_draft(
 ):
     if not title.strip():
         raise HTTPException(status_code=422, detail="Название останков не может быть пустым")
-    existing = await db.scalar(
-        select(Remains.id).where(Remains.creator_id == researcher.id, Remains.status == "draft")
-    )
-    if existing is not None:
-        raise HTTPException(status_code=409, detail="У пользователя уже есть черновик")
-    image_url, image_name = await upload_to_minio(image_file, "image")
-    try:
-        video_url, video_name = await upload_to_minio(video_file, "video")
-    except Exception:
-        await run_in_threadpool(remove_minio_file, image_name)
-        raise
-    draft = Remains(
-        title=title.strip(),
-        status="draft",
-        image_url=image_url,
-        video_url=video_url,
-        creator_id=researcher.id,
-    )
-    db.add(draft)
-    try:
-        await db.commit()
-        await db.refresh(draft)
-    except IntegrityError as error:
-        await db.rollback()
-        await run_in_threadpool(remove_minio_file, image_name)
-        await run_in_threadpool(remove_minio_file, video_name)
-        raise HTTPException(status_code=409, detail="Черновик уже создан") from error
+    draft = await create_draft_record(db, researcher, title, image_file, video_file)
     return serialize_remain((draft, 0, 0), researcher.id)
-
-
-@router.get("/remains/{remain_id}", response_model=RemainResponse, tags=["Останки"])
-async def get_remain(remain_id: int, db: Database, researcher: CurrentResearcher):
-    row = await get_published_row(db, remain_id, researcher.id)
-    if row is None:
-        raise HTTPException(status_code=404, detail="Останки не найдены или не опубликованы")
-    return serialize_remain(row, researcher.id)
 
 
 @router.put("/remains/{remain_id}/publish", response_model=RemainResponse, tags=["Останки"])
@@ -293,24 +383,9 @@ async def publish_remains(
     db: Database,
     researcher: CurrentResearcher,
 ):
-    draft = await db.scalar(
-        select(Remains)
-        .where(
-            Remains.id == remain_id,
-            Remains.creator_id == researcher.id,
-            Remains.status == "draft",
-        )
-        .with_for_update()
-    )
+    draft = await publish_draft_record(remain_id, researcher.id, fields, db)
     if draft is None:
         raise HTTPException(status_code=404, detail="Черновик не найден")
-    draft.description = fields.description
-    draft.analysis_time_days = fields.analysis_time_days
-    draft.carbon_14_pmc = fields.carbon_14_pmc
-    draft.status = "published"
-    draft.published_at = datetime.now(timezone.utc)
-    await db.commit()
-    await db.refresh(draft)
     return serialize_remain((draft, 0, 0), researcher.id)
 
 
@@ -321,41 +396,16 @@ async def set_remain_like(
     db: Database,
     researcher: CurrentResearcher,
 ):
-    remain = await db.scalar(
-        select(Remains).where(Remains.id == remain_id, Remains.status == "published")
-    )
-    if remain is None:
+    if not await set_remain_like_record(remain_id, researcher.id, fields.liked, db):
         raise HTTPException(status_code=404, detail="Опубликованные останки не найдены")
-    existing = await db.scalar(
-        select(RemainsLikes).where(
-            RemainsLikes.researcher_id == researcher.id,
-            RemainsLikes.remains_id == remain_id,
-        )
-    )
-    if fields.liked == 1 and existing is None:
-        db.add(RemainsLikes(researcher_id=researcher.id, remains_id=remain_id))
-    elif fields.liked == 0 and existing is not None:
-        await db.delete(existing)
-    await db.commit()
     row = await get_published_row(db, remain_id, researcher.id)
     return serialize_remain(row, researcher.id)
 
 
 @router.delete("/remains/{remain_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Останки"])
 async def delete_remain(remain_id: int, db: Database, researcher: CurrentResearcher):
-    result = await db.execute(
-        update(Remains)
-        .where(
-            Remains.id == remain_id,
-            Remains.creator_id == researcher.id,
-            Remains.status == "published",
-        )
-        .values(status="deleted")
-        .returning(Remains.id)
-    )
-    if result.scalar_one_or_none() is None:
+    if not await soft_delete_remain(remain_id, researcher.id, db):
         raise HTTPException(status_code=404, detail="Опубликованные останки пользователя не найдены")
-    await db.commit()
 
 
 @router.post(

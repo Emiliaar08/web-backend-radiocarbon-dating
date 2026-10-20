@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Organic Remains API - Lab 3",
-    "description": "10 REST requests for the radiocarbon dating remains service. After creating a draft, copy its id into draft_id. After publishing, copy its id into published_id.",
+    "description": "10 методов ЛР3: 3 GET, 5 POST, 1 PUT, 1 DELETE. Пользователь зафиксирован сервером. Следующая запись проверяется тем же GET ленты с remains_id и next=true. После создания скопируйте id в draft_id, после публикации — в published_id.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -21,9 +21,21 @@
         "body": {
           "mode": "formdata",
           "formdata": [
-            {"key": "title", "value": "Лабораторный образец", "type": "text"},
-            {"key": "image_file", "type": "file", "src": ""},
-            {"key": "video_file", "type": "file", "src": ""}
+            {
+              "key": "title",
+              "value": "Лабораторный образец",
+              "type": "text"
+            },
+            {
+              "key": "image_file",
+              "type": "file",
+              "src": ""
+            },
+            {
+              "key": "video_file",
+              "type": "file",
+              "src": ""
+            }
           ]
         },
         "url": "{{base_url}}/api/remains/draft",
@@ -42,11 +54,20 @@
       "name": "04 PUT publish remain",
       "request": {
         "method": "PUT",
-        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
         "body": {
           "mode": "raw",
           "raw": "{\n  \"description\": \"Радиоуглеродное датирование древесины после очистки от загрязнений. Измерение содержания C-14 позволяет оценить возраст образца и сопоставить результат с археологическим контекстом.\",\n  \"analysis_time_days\": 14,\n  \"carbon_14_pmc\": 1.385\n}",
-          "options": {"raw": {"language": "json"}}
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
         },
         "url": "{{base_url}}/api/remains/{{draft_id}}/publish",
         "description": "После успешной публикации скопируйте id ответа в переменную published_id."
@@ -57,40 +78,34 @@
       "request": {
         "method": "GET",
         "header": [],
-        "url": "{{base_url}}/api/remains/feed"
+        "url": "{{base_url}}/api/remains/feed",
+        "description": "Без параметров возвращает первую запись. Для следующей добавьте ?remains_id={{published_id}}&next=true; для конкретной записи передайте только remains_id."
       }
     },
     {
-      "name": "06 GET next remain in feed",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{base_url}}/api/remains/feed?remains_id={{published_id}}&next=true"
-      }
-    },
-    {
-      "name": "07 POST like remain",
+      "name": "06 POST like remain",
       "request": {
         "method": "POST",
-        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
         "body": {
           "mode": "raw",
           "raw": "{\n  \"liked\": 1\n}",
-          "options": {"raw": {"language": "json"}}
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
         },
         "url": "{{base_url}}/api/remains/{{published_id}}/likes"
       }
     },
     {
-      "name": "08 GET remain by id",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{base_url}}/api/remains/{{published_id}}"
-      }
-    },
-    {
-      "name": "09 DELETE remain (soft delete)",
+      "name": "07 DELETE remain (soft delete)",
       "request": {
         "method": "DELETE",
         "header": [],
@@ -98,22 +113,72 @@
       }
     },
     {
-      "name": "10 POST register researcher",
+      "name": "08 POST register researcher",
       "request": {
         "method": "POST",
-        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
         "body": {
           "mode": "raw",
           "raw": "{\n  \"username\": \"lab3_researcher_demo\",\n  \"full_name\": \"Лабораторный исследователь\",\n  \"password\": \"Radiocarbon-2026\"\n}",
-          "options": {"raw": {"language": "json"}}
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
         },
         "url": "{{base_url}}/api/researchers"
+      }
+    },
+    {
+      "name": "09 POST auth",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/researchers/auth",
+        "description": "Заглушка для лабораторной 4; в лабораторной 3 пользователь зафиксирован.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"lab3_researcher_demo\",\n  \"password\": \"Radiocarbon-2026\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "10 POST logout",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{base_url}}/api/researchers/logout",
+        "description": "Заглушка для лабораторной 4; в лабораторной 3 пользователь зафиксирован."
       }
     }
   ],
   "variable": [
-    {"key": "base_url", "value": "http://127.0.0.1:8000"},
-    {"key": "draft_id", "value": ""},
-    {"key": "published_id", "value": ""}
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "draft_id",
+      "value": ""
+    },
+    {
+      "key": "published_id",
+      "value": ""
+    }
   ]
 }
